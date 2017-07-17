@@ -1,0 +1,5 @@
+.idea/
+urban-physiology-toolkit/tests/.cache
+urban-physiology-toolkit/tests/ghostdriver.log
+urban-physiology-toolkit/pager/tests/.cache
+urban-physiology-toolkit/pager/tests/ghostdriver.log
