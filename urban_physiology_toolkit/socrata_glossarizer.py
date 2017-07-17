@@ -7,12 +7,12 @@ import json
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from .tools import (preexisting_cache, load_glossary_todo,
-                    write_resource_file, write_glossary_file)
+from .tools import (_preexisting_cache, _load_glossary_todo,
+                    _write_resource_file, _write_glossary_file)
 from selenium.common.exceptions import TimeoutException
 
 
-def resourcify(metadata, domain, endpoint_type):
+def _resourcify(metadata, domain, endpoint_type):
     """
     Given Socrata API metadata about a certain endpoint (as well as the domain of the endpoint
     e.g. "data.cityofnewyork.us", and the type, e.g. "table") return a resource-ified entry for the
@@ -66,7 +66,7 @@ def resourcify(metadata, domain, endpoint_type):
     }
 
 
-def get_portal_metadata(domain, credentials, endpoint_type):
+def _get_portal_metadata(domain, credentials, endpoint_type):
     """
     Given a domain, Socrata API credentials for that domain, and a type of endpoint of interest, returns the metadata
     provided by the portal (via the pysocrata package).
@@ -101,12 +101,12 @@ def get_resource_representation(domain, credentials, endpoint_type):
     Given a domain, Socrata API credentials for that domain, and a type of endpoint of interest, returns a full
     resource representation (using resourcify) for each resource therein.
     """
-    roi = get_portal_metadata(domain, credentials, endpoint_type)
+    roi = _get_portal_metadata(domain, credentials, endpoint_type)
 
     # Convert the pysocrata output to our data representation using resourcify.
     roi_repr = []
     for metadata in tqdm(roi):
-        roi_repr.append(resourcify(metadata, domain, endpoint_type))
+        roi_repr.append(_resourcify(metadata, domain, endpoint_type))
 
     return roi_repr
 
@@ -118,16 +118,16 @@ def write_resource_representation(domain="data.cityofnewyork.us", out="nyc-table
     get_resource_representation, using some utilities from tools.py.
     """
     # If the file already exists and we specify `use_cache=True`, simply return.
-    if preexisting_cache(out, use_cache):
+    if _preexisting_cache(out, use_cache):
         return
 
     # Generate to file and exit.
     roi_repr = []
     roi_repr += get_resource_representation(domain, credentials, endpoint_type)
-    write_resource_file(roi_repr, out)
+    _write_resource_file(roi_repr, out)
 
 
-def glossarize_table(resource, domain, driver=None, timeout=60):
+def _glossarize_table(resource, domain, driver=None, timeout=60):
     """
     Given an individual resource (as would be loaded from the resource list) and a domain, and optionally a
     PhantomJS driver (recommended), creates a glossaries entry for that resource.
@@ -175,7 +175,7 @@ def glossarize_table(resource, domain, driver=None, timeout=60):
     return [glossarized_resource]
 
 
-def get_sizings(uri, q, timeout=60):
+def _get_sizings(uri, q, timeout=60):
     """
     Given a URI and a multiprocessing.Queue, returns a structured dict explaining file size and type if download is
     successful, and None if the download process times out (takes too long).
@@ -185,9 +185,9 @@ def get_sizings(uri, q, timeout=60):
     """
     import datafy
     import sys
-    from .tools import timeout_process
+    from .tools import _timeout_process
 
-    @timeout_process(timeout)
+    @_timeout_process(timeout)
     def _size_up(uri):
         resource = datafy.get(uri)
         thing_log = []
@@ -203,7 +203,7 @@ def get_sizings(uri, q, timeout=60):
     return _size_up(uri)
 
 
-def glossarize_nontable(resource, timeout, q=None):
+def _glossarize_nontable(resource, timeout, q=None):
     """
     Same as `glossarize_table`, but for the non-table resource types.
     """
@@ -217,7 +217,7 @@ def glossarize_nontable(resource, timeout, q=None):
         q = limited_process.q()
 
     try:
-        sizings = get_sizings(
+        sizings = _get_sizings(
             resource['resource'],
             q, timeout=timeout
         )
@@ -316,7 +316,7 @@ def get_glossary(resource_list, glossary, domain='opendata.cityofnewyork.us', en
             from .pager import driver
 
             for resource in tqdm(resource_list):
-                glossarized_resource = glossarize_table(resource, domain, driver=driver)
+                glossarized_resource = _glossarize_table(resource, domain, driver=driver)
                 glossary += glossarized_resource
 
                 # Update the resource list to make note of the fact that this job has been processed.
@@ -329,7 +329,7 @@ def get_glossary(resource_list, glossary, domain='opendata.cityofnewyork.us', en
             q = limited_process.q()
 
             for resource in tqdm(list(resource_list)):
-                glossarized_resource = glossarize_nontable(resource, timeout, q=q)
+                glossarized_resource = _glossarize_nontable(resource, timeout, q=q)
                 glossary += glossarized_resource
 
                 # Update the resource list to make note of the fact that this job has been processed.
@@ -369,7 +369,7 @@ def write_glossary(domain='opendata.cityofnewyork.us', use_cache=True,
     """
 
     # Begin by loading in the data that we have.
-    resource_list, glossary = load_glossary_todo(resource_filename, glossary_filename, use_cache)
+    resource_list, glossary = _load_glossary_todo(resource_filename, glossary_filename, use_cache)
 
     # Generate the glossaries.
     try:
@@ -378,5 +378,5 @@ def write_glossary(domain='opendata.cityofnewyork.us', use_cache=True,
 
     # Save output.
     finally:
-        write_resource_file(resource_list, resource_filename)
-        write_glossary_file(glossary, glossary_filename)
+        _write_resource_file(resource_list, resource_filename)
+        _write_glossary_file(glossary, glossary_filename)

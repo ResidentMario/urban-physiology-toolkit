@@ -2,13 +2,13 @@ import pandas as pd
 from tqdm import tqdm
 import requests
 import warnings
-from .tools import (preexisting_cache, load_glossary_todo,
-                    write_resource_file, write_glossary_file, timeout_process)
+from .tools import (_preexisting_cache, _load_glossary_todo,
+                    _write_resource_file, _write_glossary_file, _timeout_process)
 
 
 def write_resource_representation(domain="data.gov.sg", out=None, use_cache=True, protocol='https'):
     # If the file already exists and we specify `use_cache=True`, simply return.
-    if preexisting_cache(out, use_cache):
+    if _preexisting_cache(out, use_cache):
         return
 
     package_list_slug = "{0}://{1}/api/3/action/package_list".format(protocol, domain)
@@ -156,7 +156,7 @@ def write_resource_representation(domain="data.gov.sg", out=None, use_cache=True
                 })
     finally:
         # Write to file and exit.
-        write_resource_file(roi_repr, out)
+        _write_resource_file(roi_repr, out)
 
 
 def write_glossary(domain="data.gov.sg", resource_filename=None, glossary_filename=None,
@@ -164,9 +164,9 @@ def write_glossary(domain="data.gov.sg", resource_filename=None, glossary_filena
     # import limited_process
     # q = limited_process.q()
 
-    resource_list, glossary = load_glossary_todo(resource_filename, glossary_filename, use_cache=use_cache)
+    resource_list, glossary = _load_glossary_todo(resource_filename, glossary_filename, use_cache=use_cache)
 
-    @timeout_process(timeout)
+    @_timeout_process(timeout)
     def _size_up(uri):
         import sys
         import datafy
@@ -233,6 +233,6 @@ def write_glossary(domain="data.gov.sg", resource_filename=None, glossary_filena
     # Whether we succeeded or got caught on a fatal error, in either case clean up.
     finally:
         # Save output.
-        write_resource_file(resource_list, resource_filename)
-        write_glossary_file(glossary, glossary_filename)
+        _write_resource_file(resource_list, resource_filename)
+        _write_glossary_file(glossary, glossary_filename)
 
