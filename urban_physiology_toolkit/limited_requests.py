@@ -12,7 +12,7 @@ import sys
 
 import pdb; pdb.set_trace()
 # TODO: UN-HARDCODE THIS!!!!!!!!
-sys.path.append("../src/urban-physiology-toolkit/datafy")
+sys.path.append("../src/urban_physiology_toolkit/datafy")
 import datafy
 
 

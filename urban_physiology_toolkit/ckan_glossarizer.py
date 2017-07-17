@@ -2,8 +2,8 @@ import pandas as pd
 from tqdm import tqdm
 import requests
 import warnings
-from .generic import (preexisting_cache, load_glossary_todo,
-                      write_resource_file, write_glossary_file, timeout_process)
+from .tools import (preexisting_cache, load_glossary_todo,
+                    write_resource_file, write_glossary_file, timeout_process)
 
 
 def write_resource_representation(domain="data.gov.sg", out=None, use_cache=True, protocol='https'):

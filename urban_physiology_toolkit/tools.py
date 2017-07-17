@@ -1,5 +1,6 @@
 """
-Generic IO methods which are common across all glossarizers, but not important enough to need their own package.
+Generic IO methods which are common across all glossarizers, but not important enough to need their own package,
+as well as airscooter integration tools.
 """
 
 import os

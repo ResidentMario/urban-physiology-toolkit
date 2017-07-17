@@ -7,8 +7,8 @@ import json
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from .generic import (preexisting_cache, load_glossary_todo,
-                      write_resource_file, write_glossary_file)
+from .tools import (preexisting_cache, load_glossary_todo,
+                    write_resource_file, write_glossary_file)
 from selenium.common.exceptions import TimeoutException
 
 
@@ -115,7 +115,7 @@ def write_resource_representation(domain="data.cityofnewyork.us", out="nyc-table
                                   credentials="../../../auth/nyc-open-data.json", endpoint_type='table'):
     """
     Fetches a resource representation for a single resource type from a Socrata portal. Simple I/O wrapper around
-    get_resource_representation, using some utilities from generic.py.
+    get_resource_representation, using some utilities from tools.py.
     """
     # If the file already exists and we specify `use_cache=True`, simply return.
     if preexisting_cache(out, use_cache):
@@ -185,7 +185,7 @@ def get_sizings(uri, q, timeout=60):
     """
     import datafy
     import sys
-    from .generic import timeout_process
+    from .tools import timeout_process
 
     @timeout_process(timeout)
     def _size_up(uri):
