@@ -5,3 +5,5 @@ urban_physiology_toolkit/pager/tests/.cache
 urban_physiology_toolkit/pager/tests/ghostdriver.log
 urban_physiology_toolkit.egg-info
 urban_physiology_toolkit/__pycache__
+.cache/
+urban_physiology_toolkit/tests/__pycache__/

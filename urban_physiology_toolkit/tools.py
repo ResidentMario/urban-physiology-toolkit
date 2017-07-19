@@ -100,3 +100,62 @@ def _timeout_process(seconds=10, error_message=os.strerror(errno.ETIME)):
         return wraps(func)(wrapper)
 
     return decorator
+
+
+def slugify(value):
+    """
+    Normalizes string, converts to lowercase, removes non-alpha characters,
+    and converts spaces to hyphens.
+    """
+    # cf. https://stackoverflow.com/questions/295135/turn-a-string-into-a-valid-filename
+    import unicodedata
+    import re
+
+    value = unicodedata.normalize('NFKC', value)
+    value = re.sub('[^\w\s-]', '', value).strip().lower()
+    value = re.sub('[-\s]+', '-', value)
+    return value
+
+
+def init_catalog(glossary_filepath, root):
+    """
+    Initializes a catalog's folder structure for the given glossary at the given root folder.
+    """
+    from pathlib import Path
+    import os
+
+    root = str(Path(root).resolve())
+    root_folders = os.listdir(root)
+
+    if 'catalog' not in root_folders:
+        os.mkdir(root + "/catalog")
+    if 'tasks' not in root_folders:
+        os.mkdir(root + "/tasks")
+
+    with open(glossary_filepath, "r") as f:
+        glossary = json.load(f)
+
+    resource_folder_names = []
+
+    for entry in glossary:
+        resource_folder_name = slugify(entry['name'])
+
+        if resource_folder_name not in resource_folder_names:
+            os.mkdir(root + "/tasks" + "/{0}".format(resource_folder_name))
+            os.mkdir(root + "/catalog" + "/{0}".format(resource_folder_name))
+            resource_folder_names.append(resource_folder_name)
+
+        dataset_name = entry['dataset'] if entry['dataset'] != "." else "data.csv"
+        dataset_filepath = "{0}/catalog/{1}/{2}".format(root, resource_folder_name, dataset_name)
+
+        with open(root + "/tasks" + "/{0}".format(resource_folder_name) + "/depositor.py", "w") as f:
+            if entry['dataset'] == "." and entry['preferred_format'] == "csv":
+                f.write("""
+import requests
+r = requests.get("{0}")
+with open("{1}", "wb") as f:
+    f.write(r.content)
+""".format(entry['resource'], dataset_filepath))
+            else:
+                f.write("""# TODO: Implement fetch for {0}
+pass""".format(entry['resource']))
