@@ -6,7 +6,7 @@ import unittest
 import pytest
 import json
 
-import sys; sys.path.insert(0, '../../')
+import sys; sys.path.insert(0, './../')
 # noinspection PyUnresolvedReferences
 from glossarizers import socrata_glossarizer
 import requests

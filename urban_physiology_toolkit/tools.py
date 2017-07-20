@@ -136,23 +136,31 @@ def init_catalog(glossary_filepath, root):
         glossary = json.load(f)
 
     # Resource names are not necessarily unique; only resource URLs are. We need to modify our resource names
-    # somewhat as we go along to ensure that all of our elements end up in the right places.
+    # as we go along to ensure that all of our elements end up in the right places, folder-wise.
     resources = [entry['resource'] for entry in glossary]
     raw_resource_folder_names = [slugify(entry['name']) for entry in glossary]
     resource_folder_names = []
-    resource_to_folder_name_map = dict()
+    name_map = dict()
 
-    # for resource, raw_resource_folder_name in zip(resources, resource_folder_names):
-    #     if resource in resource_to_folder_name_map:
-    #         resource_folder_names.append(resource_to_folder_name_map['resource'])
+    for resource, raw_resource_folder_name in zip(resources, raw_resource_folder_names):
+        if resource in name_map:
+            resource_folder_names.append(name_map[resource])
+        elif resource not in name_map and raw_resource_folder_name in name_map.values():  # collision!
+            resource_folder_name = raw_resource_folder_name + "-2"
+            name_map[resource] = resource_folder_name
+            resource_folder_names.append(resource_folder_name)
+        else:
+            name_map[resource] = raw_resource_folder_name
+            resource_folder_names.append(name_map[resource])
 
-    for entry in glossary:
-        resource_folder_name = slugify(entry['name'])
+    # import pdb; pdb.set_trace()
 
-        if resource_folder_name not in resource_folder_names:
+    folders = []
+    for entry, resource_folder_name in zip(glossary, resource_folder_names):
+        if resource_folder_name not in folders:
             os.mkdir(root + "/tasks" + "/{0}".format(resource_folder_name))
             os.mkdir(root + "/catalog" + "/{0}".format(resource_folder_name))
-            resource_folder_names.append(resource_folder_name)
+            folders.append(resource_folder_name)
 
         dataset_name = entry['dataset'] if entry['dataset'] != "." else "data.csv"
         dataset_filepath = "{0}/catalog/{1}/{2}".format(root, resource_folder_name, dataset_name)

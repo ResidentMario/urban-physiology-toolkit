@@ -1,0 +1,78 @@
+[
+    {
+        "last_updated": "2017-02-10 16:38:13+00:00",
+        "sources": [
+            "Department of Education (DOE)"
+        ],
+        "description": "2009 school survey with ratings in categories such as parental academic expectations, teacher academic expectations, student engagement, safety, and other categories",
+        "preferred_format": "xls",
+        "protocol": "https",
+        "keywords_provided": [
+            "department of education",
+            "lifelong learning",
+            "survey",
+            "learning",
+            "elementary",
+            "junior high school",
+            "high school",
+            "is",
+            "jhs",
+            "p.s.",
+            "schools",
+            "school",
+            "board of ed",
+            "education"
+        ],
+        "resource": "https://data.cityofnewyork.us/download/ens7-ac7e/application%2Fzip",
+        "dataset": "2009 Survey Data Dictionary.xls",
+        "column_names": [],
+        "created": "2011-08-30 17:23:12+00:00",
+        "flags": [],
+        "page_views": 238,
+        "name": "2009 School Survey",
+        "filesize": 203.0322265625,
+        "preferred_mimetype": "application/vnd.ms-excel",
+        "landing_page": "https://data.cityofnewyork.us/d/ens7-ac7e",
+        "topics_provided": [
+            "Education"
+        ]
+    },
+    {
+        "last_updated": "2017-02-10 16:38:13+00:00",
+        "sources": [
+            "Department of Education (DOE)"
+        ],
+        "description": "2009 school survey with ratings in categories such as parental academic expectations, teacher academic expectations, student engagement, safety, and other categories",
+        "preferred_format": "txt",
+        "protocol": "https",
+        "keywords_provided": [
+            "department of education",
+            "lifelong learning",
+            "survey",
+            "learning",
+            "elementary",
+            "junior high school",
+            "high school",
+            "is",
+            "jhs",
+            "p.s.",
+            "schools",
+            "school",
+            "board of ed",
+            "education"
+        ],
+        "resource": "https://data.cityofnewyork.us/download/xxxx-xxxx/application%2Fzip",
+        "dataset": "Masterfile09_d75.txt",
+        "column_names": [],
+        "created": "2011-08-30 17:23:12+00:00",
+        "flags": [],
+        "page_views": 238,
+        "name": "2009 School Survey",
+        "filesize": 283.1591796875,
+        "preferred_mimetype": "text/plain",
+        "landing_page": "https://data.cityofnewyork.us/d/xxxx-xxxx",
+        "topics_provided": [
+            "Education"
+        ]
+    }
+]
