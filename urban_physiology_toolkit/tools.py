@@ -146,15 +146,22 @@ def init_catalog(glossary_filepath, root):
         if resource in name_map:
             resource_folder_names.append(name_map[resource])
         elif resource not in name_map and raw_resource_folder_name in name_map.values():  # collision!
-            resource_folder_name = raw_resource_folder_name + "-2"
+            n = 2
+            while True:
+                if raw_resource_folder_name + str(n) in name_map:
+                    n += 1
+                    continue
+                else:
+                    resource_folder_name = raw_resource_folder_name + "-" + str(n)
+                    break
+
             name_map[resource] = resource_folder_name
             resource_folder_names.append(resource_folder_name)
         else:
             name_map[resource] = raw_resource_folder_name
             resource_folder_names.append(name_map[resource])
 
-    # import pdb; pdb.set_trace()
-
+    # Finally, write the folders.
     folders = []
     for entry, resource_folder_name in zip(glossary, resource_folder_names):
         if resource_folder_name not in folders:
