@@ -172,14 +172,23 @@ def init_catalog(glossary_filepath, root):
         dataset_name = entry['dataset'] if entry['dataset'] != "." else "data.csv"
         dataset_filepath = "{0}/catalog/{1}/{2}".format(root, resource_folder_name, dataset_name)
 
-        with open(root + "/tasks" + "/{0}".format(resource_folder_name) + "/depositor.py", "w") as f:
-            if entry['dataset'] == "." and entry['preferred_format'] == "csv":
-                f.write("""
+        task_filepath = root + "/tasks" + "/{0}".format(resource_folder_name) + "/depositor.py"
+        catalog_filepath = root + "/catalog" + "/{0}".format(resource_folder_name) + "/transform.py"
+
+        with open(task_filepath, "w") as f:
+            f.write("""
 import requests
 r = requests.get("{0}")
 with open("{1}", "wb") as f:
     f.write(r.content)
 """.format(entry['resource'], dataset_filepath))
-            else:
-                f.write("""# TODO: Implement fetch for {0}
-pass""".format(entry['resource']))
+
+        if entry['preferred_format'] == 'csv':
+            with open(catalog_filepath, "w") as f:
+                # noinspection SqlNoDataSourceInspection,SqlDialectInspection
+#                 f.write("""
+# with open("{0}", "wb") as f:
+#     f.write(r.content)
+#             """.format(entry['resource'], dataset_filepath))
+                # TODO: Implement writing the base transform.
+                pass
