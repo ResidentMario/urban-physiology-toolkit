@@ -135,7 +135,16 @@ def init_catalog(glossary_filepath, root):
     with open(glossary_filepath, "r") as f:
         glossary = json.load(f)
 
+    # Resource names are not necessarily unique; only resource URLs are. We need to modify our resource names
+    # somewhat as we go along to ensure that all of our elements end up in the right places.
+    resources = [entry['resource'] for entry in glossary]
+    raw_resource_folder_names = [slugify(entry['name']) for entry in glossary]
     resource_folder_names = []
+    resource_to_folder_name_map = dict()
+
+    # for resource, raw_resource_folder_name in zip(resources, resource_folder_names):
+    #     if resource in resource_to_folder_name_map:
+    #         resource_folder_names.append(resource_to_folder_name_map['resource'])
 
     for entry in glossary:
         resource_folder_name = slugify(entry['name'])
