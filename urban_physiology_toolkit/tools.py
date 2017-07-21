@@ -169,6 +169,7 @@ def init_catalog(glossary_filepath, root):
     from pathlib import Path
     import os
 
+    # Initialize the bare root folders.
     root = str(Path(root).resolve())
     root_folders = os.listdir(root)
 
@@ -177,6 +178,7 @@ def init_catalog(glossary_filepath, root):
     if 'tasks' not in root_folders:
         os.mkdir(root + "/tasks")
 
+    # Read in the glossary.
     with open(glossary_filepath, "r") as f:
         glossary = json.load(f)
 
@@ -206,37 +208,57 @@ def init_catalog(glossary_filepath, root):
             name_map[resource] = raw_resource_folder_name
             resource_folder_names.append(name_map[resource])
 
-    # Write the depositor task folders.
-    folders = []
+    # Write the depositor task folders. We do this by iterating through glossary entries, writing new depositors for
+    # any entry we find which is not already in our touched folders.
+    folders = set()
     for entry, resource_folder_name in zip(glossary, resource_folder_names):
         if resource_folder_name not in folders:
             os.mkdir(root + "/tasks" + "/{0}".format(resource_folder_name))
             os.mkdir(root + "/catalog" + "/{0}".format(resource_folder_name))
-            folders.append(resource_folder_name)
+            folders.add(resource_folder_name)
 
-            data_filename = resource_folder_name if entry['dataset'] != "." else "data.csv"
+            data_filename = "data.{0}".format(entry['preferred_format']) if entry['dataset'] == "." else "data.zip"
             dataset_filepath = "{0}/catalog/{1}/{2}".format(root, resource_folder_name, data_filename)
-            task_filepath = root + "/tasks" + "/{0}".format(resource_folder_name) + "/depositor.py"
+            depositor_filepath = root + "/tasks" + "/{0}".format(resource_folder_name) + "/depositor.py"
 
-            # TODO: Determine how to deal with figuring out the filetype. Use python-magic?
-            with open(task_filepath, "w") as f:
-                f.write("""
-import requests
+            with open(depositor_filepath, "w") as f:
+                f.write("""import requests
 r = requests.get("{0}")
 with open("{1}", "wb") as f:
     f.write(r.content)
 """.format(entry['resource'], dataset_filepath))
 
-    # Write the transform task folders.
+    # Write the transform task folders. We do this by first organizing our entries into three categories:
+    # 1. CSV and geospatial resources. No transform necessary, so none is written.
+    # 2. Archival resources. We know that a resource is an archival resource when its URI appears multiple times in
+    #    the glossary. Right now the limitation in place is that if we have an archival file, we assume that it is
+    #    provided in a ZIP format (as opposed to, say, a TAR, or some other archive). Significant re-engineering
+    #    still needs to be done in order to enable alternative file formats. See the GitHub issues. Anyway,
+    #    if it's an assumed ZIP file, an incomplete transform is written that unzips the file and prepares a data
+    #    package.
+    # 3. Other resources. These are single-dataset resources which are not CSV or geospatial files. An incomplete
+    #    transform is written in these cases too.
+    folders = set()
     for entry, resource_folder_name in zip(glossary, resource_folder_names):
-        catalog_filepath = root + "/catalog" + "/{0}".format(resource_folder_name)
-        with open(catalog_filepath + "/datapackage.json", "w") as f:
-            json.dumps(generate_data_package_from_glossary_entry(entry), indent=4)
+        if resource_folder_name not in folders:
+            catalog_filepath = root + "/catalog" + "/{0}".format(resource_folder_name)
+            transform_filepath = root + "/tasks" + "/{0}".format(resource_folder_name) + "/transform.py"
+            data_filename = "data.{0}".format(entry['preferred_format']) if entry['dataset'] == "." else "data.zip"
+            dataset_filepath = "{0}/catalog/{1}/{2}".format(root, resource_folder_name, data_filename)
 
-        if entry['dataset'] == "." and entry['preferred_format'] == "csv":
-            # No catalog transform is needed! The raw resource *is* the dataset.
-            pass
-        else:
-            # Pre-write incomplete catalog transforms.
-            # TODO
-            pass
+            with open(catalog_filepath + "/datapackage.json", "w") as f:
+                json.dumps(generate_data_package_from_glossary_entry(entry), indent=4)
+
+            if entry['dataset'] == "." and entry['preferred_format'] in ["csv", "geojson"]:  # Case 1
+                pass
+            elif entry['dataset'] != ".":  # Case 2
+                with open(transform_filepath, "w") as f:
+                    f.write("""# TODO: Finish implementing!
+from zipfile import ZipFile
+z = ZipFile({0}, "r")
+""".format(dataset_filepath))
+            else:  # Case 3
+                with open(transform_filepath, "w") as f:
+                    f.write("""# TODO: Finish implementing!
+# {0}
+""".format(dataset_filepath))

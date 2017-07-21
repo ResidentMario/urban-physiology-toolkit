@@ -73,35 +73,6 @@ class TestRepeatedResourceNamePrepping(unittest.TestCase):
         shutil.rmtree("temp")
 
 
-class TestFullInitializationPrepping(unittest.TestCase):
-    """
-    Tests that folder initialization works for a large glossary---in this case, a glossarization of the New York City
-    open data portal dating from mid-June.
-    """
-
-    def setUp(self):
-        os.mkdir("temp")
-
-    def test_init(self):
-        init_catalog("./data/full_glossary.json", "temp")
-
-        with open("./data/full_glossary.json", "r") as f:
-            glossary = json.load(f)
-
-        catalog_folders = os.listdir("./temp/catalog")
-        task_folders = os.listdir("./temp/tasks")
-
-        n_catalog = len(catalog_folders)
-        n_tasks = len(task_folders)
-        n_expected = len(set([entry['resource'] for entry in glossary]))
-
-        assert n_catalog == n_expected
-        assert n_tasks == n_expected
-
-    def tearDown(self):
-        shutil.rmtree("temp")
-
-
 class TestGeneratingDataPackagesFromGlossaryEntries(unittest.TestCase):
     def setUp(self):
         self.common_keys = {'preferred_mimetype', 'column_names', 'datapackage_version', 'title', 'created',
@@ -129,6 +100,38 @@ class TestGeneratingDataPackagesFromGlossaryEntries(unittest.TestCase):
             glossary_entry = json.load(f)
 
         result = generate_data_package_from_glossary_entry(glossary_entry)
+
         assert set(result.keys()) == self.common_keys
         assert result['resources'] == []
         assert not result['complete']
+
+
+class TestFullInitializationPrepping(unittest.TestCase):
+    """
+    Tests that folder initialization works for a large glossary---in this case, a glossarization of the New York City
+    open data portal dating from mid-June.
+    """
+
+    def setUp(self):
+        os.mkdir("temp")
+
+    def test_init(self):
+        init_catalog("./data/full_glossary.json", "temp")
+
+        with open("./data/full_glossary.json", "r") as f:
+            glossary = json.load(f)
+
+        catalog_folders = os.listdir("./temp/catalog")
+        task_folders = os.listdir("./temp/tasks")
+
+        n_catalog = len(catalog_folders)
+        n_tasks = len(task_folders)
+        n_expected = len(set([entry['resource'] for entry in glossary]))
+
+        import pdb; pdb.set_trace()
+
+        assert n_catalog == n_expected
+        assert n_tasks == n_expected
+
+    def tearDown(self):
+        shutil.rmtree("temp")
