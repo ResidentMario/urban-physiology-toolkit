@@ -108,9 +108,13 @@ class TestGeneratingDataPackagesFromGlossaryEntries(unittest.TestCase):
                             'contributors', 'name', 'filesize', 'licenses', 'sources', 'protocol', 'views',
                             'last_updated', 'keywords', 'description', 'dependencies', 'landing_page',
                             'topics_provided', 'page_views', 'resources', 'columns', 'available_formats', 'rows',
-                            'version', 'preferred_format', 'maintainers', 'publishers'}
+                            'version', 'preferred_format', 'maintainers', 'publishers', 'complete'}
 
     def test_csv(self):
+        """
+        Makes sure that CSV results follow the schema.
+        """
+
         with open("data/csv_glossary_entry.json", "r") as f:
             glossary_entry = json.load(f)
 
@@ -118,6 +122,7 @@ class TestGeneratingDataPackagesFromGlossaryEntries(unittest.TestCase):
         assert set(result.keys()) == self.common_keys
         assert result['resources'][0]['path'] == 'data.csv'
         assert 'url' in result['resources'][0]
+        assert result['complete']
 
     def test_generic(self):
         with open("data/non_csv_glossary_entry.json", "r") as f:
@@ -126,3 +131,4 @@ class TestGeneratingDataPackagesFromGlossaryEntries(unittest.TestCase):
         result = generate_data_package_from_glossary_entry(glossary_entry)
         assert set(result.keys()) == self.common_keys
         assert result['resources'] == []
+        assert not result['complete']

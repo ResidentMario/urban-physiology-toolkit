@@ -121,6 +121,8 @@ def generate_data_package_from_glossary_entry(entry):
     """
     Given a glossary entry, returns a datapackage.json file for that entry.
     """
+    solo_csv_resource = entry['dataset'] == '.' and entry['preferred_format'] == 'csv'
+
     package = {
         # datapackage fields
         'name': slugify(entry['name']),
@@ -141,7 +143,9 @@ def generate_data_package_from_glossary_entry(entry):
         'rows': None if 'rows' not in entry else entry['rows'],
         'columns': None if 'columns' not in entry else entry['columns'],
         'filesize': None if 'filesize' not in entry else entry['filesize'],
-        'available_formats': None
+        'available_formats': None,
+        # signal field
+        'complete': solo_csv_resource
     }
 
     # other glossary fields
@@ -149,7 +153,8 @@ def generate_data_package_from_glossary_entry(entry):
                   'landing_page', 'last_updated', 'protocol', 'created']:
         package[field] = entry[field]
 
-    if entry['dataset'] == '.' and entry['preferred_format'] == 'csv':
+    # populate the resources field directly, if appropriate.
+    if solo_csv_resource:
         package['resources'] = [
             {'path': 'data.csv', 'url': entry['resource']}
         ]
@@ -209,10 +214,11 @@ def init_catalog(glossary_filepath, root):
             os.mkdir(root + "/catalog" + "/{0}".format(resource_folder_name))
             folders.append(resource_folder_name)
 
-            dataset_name = entry['dataset'] if entry['dataset'] != "." else "data.csv"
-            dataset_filepath = "{0}/catalog/{1}/{2}".format(root, resource_folder_name, dataset_name)
+            data_filename = resource_folder_name if entry['dataset'] != "." else "data.csv"
+            dataset_filepath = "{0}/catalog/{1}/{2}".format(root, resource_folder_name, data_filename)
             task_filepath = root + "/tasks" + "/{0}".format(resource_folder_name) + "/depositor.py"
 
+            # TODO: Determine how to deal with figuring out the filetype. Use python-magic?
             with open(task_filepath, "w") as f:
                 f.write("""
 import requests
@@ -222,25 +228,15 @@ with open("{1}", "wb") as f:
 """.format(entry['resource'], dataset_filepath))
 
     # Write the transform task folders.
-    # folders = []
     for entry, resource_folder_name in zip(glossary, resource_folder_names):
         catalog_filepath = root + "/catalog" + "/{0}".format(resource_folder_name)
+        with open(catalog_filepath + "/datapackage.json", "w") as f:
+            json.dumps(generate_data_package_from_glossary_entry(entry), indent=4)
+
         if entry['dataset'] == "." and entry['preferred_format'] == "csv":
-            # Pre-write complete catalog transform.
-            # TODO
+            # No catalog transform is needed! The raw resource *is* the dataset.
             pass
         else:
             # Pre-write incomplete catalog transforms.
             # TODO
             pass
-
-#         if entry['preferred_format'] in ['csv', 'geojson']:
-#             # i
-#             with open(catalog_filepath, "w") as f:
-#                 # noinspection SqlNoDataSourceInspection,SqlDialectInspection
-# #                 f.write("""
-# # with open("{0}", "wb") as f:
-# #     f.write(r.content)
-# #             """.format(entry['resource'], dataset_filepath))
-#                 # TODO: Implement writing the base transform.
-#                 pass
