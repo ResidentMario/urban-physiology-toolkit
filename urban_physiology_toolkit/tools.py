@@ -117,6 +117,46 @@ def slugify(value):
     return value
 
 
+def generate_data_package_from_glossary_entry(entry):
+    """
+    Given a glossary entry, returns a datapackage.json file for that entry.
+    """
+    package = {
+        # datapackage fields
+        'name': slugify(entry['name']),
+        'datapackage_version': '1.0-beta',
+        'title': entry['name'],
+        'version': 'N/A',
+        'keywords': entry['keywords_provided'],
+        'description': entry['description'],
+        'licenses': [],
+        'sources': [{'name': source, 'web': 'https://example.com'} for source in entry['sources']],
+        'contributors': [],
+        'maintainers': [],
+        'publishers': [],
+        'dependencies': dict(),
+        'resources': [],
+        'views': [],
+        # possibly empty glossary fields
+        'rows': None if 'rows' not in entry else entry['rows'],
+        'columns': None if 'columns' not in entry else entry['columns'],
+        'filesize': None if 'filesize' not in entry else entry['filesize'],
+        'available_formats': None
+    }
+
+    # other glossary fields
+    for field in ['page_views', 'preferred_mimetype', 'topics_provided', 'preferred_format', 'column_names',
+                  'landing_page', 'last_updated', 'protocol', 'created']:
+        package[field] = entry[field]
+
+    if entry['dataset'] == '.' and entry['preferred_format'] == 'csv':
+        package['resources'] = [
+            {'path': 'data.csv', 'url': entry['resource']}
+        ]
+
+    return package
+
+
 def init_catalog(glossary_filepath, root):
     """
     Initializes a catalog's folder structure for the given glossary at the given root folder.
@@ -161,7 +201,7 @@ def init_catalog(glossary_filepath, root):
             name_map[resource] = raw_resource_folder_name
             resource_folder_names.append(name_map[resource])
 
-    # Finally, write the folders.
+    # Write the depositor task folders.
     folders = []
     for entry, resource_folder_name in zip(glossary, resource_folder_names):
         if resource_folder_name not in folders:
@@ -169,26 +209,38 @@ def init_catalog(glossary_filepath, root):
             os.mkdir(root + "/catalog" + "/{0}".format(resource_folder_name))
             folders.append(resource_folder_name)
 
-        dataset_name = entry['dataset'] if entry['dataset'] != "." else "data.csv"
-        dataset_filepath = "{0}/catalog/{1}/{2}".format(root, resource_folder_name, dataset_name)
+            dataset_name = entry['dataset'] if entry['dataset'] != "." else "data.csv"
+            dataset_filepath = "{0}/catalog/{1}/{2}".format(root, resource_folder_name, dataset_name)
+            task_filepath = root + "/tasks" + "/{0}".format(resource_folder_name) + "/depositor.py"
 
-        task_filepath = root + "/tasks" + "/{0}".format(resource_folder_name) + "/depositor.py"
-        catalog_filepath = root + "/catalog" + "/{0}".format(resource_folder_name) + "/transform.py"
-
-        with open(task_filepath, "w") as f:
-            f.write("""
+            with open(task_filepath, "w") as f:
+                f.write("""
 import requests
 r = requests.get("{0}")
 with open("{1}", "wb") as f:
     f.write(r.content)
 """.format(entry['resource'], dataset_filepath))
 
-        if entry['preferred_format'] == 'csv':
-            with open(catalog_filepath, "w") as f:
-                # noinspection SqlNoDataSourceInspection,SqlDialectInspection
-#                 f.write("""
-# with open("{0}", "wb") as f:
-#     f.write(r.content)
-#             """.format(entry['resource'], dataset_filepath))
-                # TODO: Implement writing the base transform.
-                pass
+    # Write the transform task folders.
+    # folders = []
+    for entry, resource_folder_name in zip(glossary, resource_folder_names):
+        catalog_filepath = root + "/catalog" + "/{0}".format(resource_folder_name)
+        if entry['dataset'] == "." and entry['preferred_format'] == "csv":
+            # Pre-write complete catalog transform.
+            # TODO
+            pass
+        else:
+            # Pre-write incomplete catalog transforms.
+            # TODO
+            pass
+
+#         if entry['preferred_format'] in ['csv', 'geojson']:
+#             # i
+#             with open(catalog_filepath, "w") as f:
+#                 # noinspection SqlNoDataSourceInspection,SqlDialectInspection
+# #                 f.write("""
+# # with open("{0}", "wb") as f:
+# #     f.write(r.content)
+# #             """.format(entry['resource'], dataset_filepath))
+#                 # TODO: Implement writing the base transform.
+#                 pass

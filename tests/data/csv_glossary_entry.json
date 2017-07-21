@@ -1,0 +1,46 @@
+{
+    "columns": 3,
+    "flags": [],
+    "page_views": 1521,
+    "resource": "https://data.cityofnewyork.us/api/views/9cw8-7heb/rows.csv?accessType=DOWNLOAD",
+    "preferred_mimetype": "text/csv",
+    "sources": [
+        "Department of Information Technology & Telecommunications (DoITT)"
+    ],
+    "description": "A list of all .nyc domains registered along with the registration date and registrant type. This list is updated daily.",
+    "name": ".nyc Domain Registrations",
+    "keywords_provided": [
+        "web",
+        "internet",
+        ".nyc",
+        "registration",
+        "page",
+        "webpage",
+        "website",
+        "site",
+        "domain"
+    ],
+    "rows": 73900,
+    "topics_provided": [
+        "Business"
+    ],
+    "preferred_format": "csv",
+    "column_names": [
+        "Domain Registration Date ",
+        "Domain Name ",
+        "Nexus Category"
+    ],
+    "landing_page": "https://data.cityofnewyork.us/d/9cw8-7heb",
+    "last_updated": "2017-05-31 21:08:56+00:00",
+    "dataset": ".",
+    "protocol": "https",
+    "created": "2015-07-13 18:48:56+00:00",
+    "available_formats": [
+        "csv",
+        "json",
+        "rdf",
+        "rss",
+        "tsv",
+        "xml"
+    ]
+}

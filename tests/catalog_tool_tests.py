@@ -10,7 +10,7 @@ import shutil
 
 import sys; sys.path.insert(0, './../')
 # noinspection PyUnresolvedReferences
-from urban_physiology_toolkit.tools import init_catalog
+from urban_physiology_toolkit.tools import (init_catalog, generate_data_package_from_glossary_entry)
 
 
 class TestBlobPrepping(unittest.TestCase):
@@ -100,3 +100,29 @@ class TestFullInitializationPrepping(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree("temp")
+
+
+class TestGeneratingDataPackagesFromGlossaryEntries(unittest.TestCase):
+    def setUp(self):
+        self.common_keys = {'preferred_mimetype', 'column_names', 'datapackage_version', 'title', 'created',
+                            'contributors', 'name', 'filesize', 'licenses', 'sources', 'protocol', 'views',
+                            'last_updated', 'keywords', 'description', 'dependencies', 'landing_page',
+                            'topics_provided', 'page_views', 'resources', 'columns', 'available_formats', 'rows',
+                            'version', 'preferred_format', 'maintainers', 'publishers'}
+
+    def test_csv(self):
+        with open("data/csv_glossary_entry.json", "r") as f:
+            glossary_entry = json.load(f)
+
+        result = generate_data_package_from_glossary_entry(glossary_entry)
+        assert set(result.keys()) == self.common_keys
+        assert result['resources'][0]['path'] == 'data.csv'
+        assert 'url' in result['resources'][0]
+
+    def test_generic(self):
+        with open("data/non_csv_glossary_entry.json", "r") as f:
+            glossary_entry = json.load(f)
+
+        result = generate_data_package_from_glossary_entry(glossary_entry)
+        assert set(result.keys()) == self.common_keys
+        assert result['resources'] == []
