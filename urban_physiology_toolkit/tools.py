@@ -255,7 +255,7 @@ with open("{1}", "wb") as f:
                 with open(transform_filepath, "w") as f:
                     f.write("""# TODO: Finish implementing!
 from zipfile import ZipFile
-z = ZipFile({0}, "r")
+z = ZipFile("{0}", "r")
 """.format(dataset_filepath))
             else:  # Case 3
                 with open(transform_filepath, "w") as f:

@@ -128,7 +128,8 @@ class TestFullInitializationPrepping(unittest.TestCase):
         n_tasks = len(task_folders)
         n_expected = len(set([entry['resource'] for entry in glossary]))
 
-        import pdb; pdb.set_trace()
+        assert all([os.path.isfile("./temp/catalog/{0}/datapackage.json".format(cf)) for cf in os.listdir(
+            "./temp/catalog")])
 
         assert n_catalog == n_expected
         assert n_tasks == n_expected
