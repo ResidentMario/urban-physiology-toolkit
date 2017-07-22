@@ -4,7 +4,7 @@ setup(
   name = 'urban_physiology_toolkit',
   packages = ['urban_physiology_toolkit'], # this must be the same as the name above
   install_requires=['numpy', 'pandas', 'requests', 'pysocrata', 'bs4', 'requests-file', 'selenium', 'tqdm',
-                    'python-magic'],
+                    'python-magic', 'airscooter'],
   py_modules=['urban_physiology_toolkit'],
   version = '0.0.1',  # note to self: also update the one is the source!
   description = 'Missing data visualization module for Python.',

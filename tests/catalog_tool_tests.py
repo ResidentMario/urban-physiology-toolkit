@@ -1,5 +1,6 @@
 """
-Unit tests for catalog initialization methodology.
+Unit tests for the catalog initialization methodology. This test suite only covers the file I/O. Tests for DAG creation
+and execution, a longer-running process, are in a separate file.
 """
 
 import unittest

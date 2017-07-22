@@ -6,6 +6,8 @@ as well as airscooter integration tools.
 import os
 import json
 import errno
+from ast import literal_eval
+from pathlib import Path
 
 
 def _preexisting_cache(folder_filepath, use_cache):
@@ -226,6 +228,8 @@ def init_catalog(glossary_filepath, root):
 r = requests.get("{0}")
 with open("{1}", "wb") as f:
     f.write(r.content)
+
+outputs = ["{1}"]
 """.format(entry['resource'], dataset_filepath))
 
     # Write the transform task folders. We do this by first organizing our entries into three categories:
@@ -256,9 +260,67 @@ with open("{1}", "wb") as f:
                     f.write("""# TODO: Finish implementing!
 from zipfile import ZipFile
 z = ZipFile("{0}", "r")
+
+outputs = []
 """.format(dataset_filepath))
             else:  # Case 3
                 with open(transform_filepath, "w") as f:
                     f.write("""# TODO: Finish implementing!
 # {0}
+
+outputs = []
 """.format(dataset_filepath))
+
+
+def update_dag(root="."):
+    """
+    Updates the Airscooter DAG so that it reflects the current state of the catalog. This op:
+    * Create a .airflow folder and Airflow DAG if one does not yet exist.
+    * Adds tasks with fleshed-out depositors and transforms to the DAG.
+    * Ignores incomplete transforms (the flag currently used is the presence of a # TOOD shebang line)
+    * Removes tasks defined in the DAG which are not also defined in the catalog tasks.
+    """
+    from airscooter.orchestration import Depositor, Transform
+
+    resource_folders = os.listdir("{0}/tasks/".format(root))
+    tasks = []
+
+    for folder in resource_folders:
+        tasks = os.listdir("{0}/tasks/{1}".format(root, folder))
+
+        # TODO: Allow {py, ipynb, sh} tasks.
+        if "depositor.py" in tasks:
+            name = "{0}-depositor".format(folder)
+            filename = "{0}/tasks/{1}/depositor.py".format(root, folder)
+
+            with open(filename, "r") as f:
+                outputs = literal_eval(f.readlines()[-1])
+
+            def munge_path(path):
+                # TODO: Flag relative-versus-absolute better.
+                # Make relative filepaths absolute.
+                if "/" not in path:
+                    return str(Path("{0}/catalog/{1}/{2}".format(root, folder, filename)).resolve())
+                else:
+                    return path
+
+            outputs = [munge_path(path) for path in outputs]
+
+            dep = Depositor(name, filename, outputs)
+            tasks.append(dep)
+
+        if "transform.py" in tasks:
+            name = "{0}-transform".format(folder)
+            filename = "{0}/tasks/{1}/transform.py"
+            inputs = tasks[-1].output
+
+            with open(filename, "r") as f:
+                outputs = literal_eval(f.readlines()[-1])
+
+            trans = Transform(name, filename, inputs, outputs, requirements=inputs)
+            tasks.append(trans)
+
+    from airscooter.orchestration import serialize_to_file, write_airflow_string
+
+    serialize_to_file(tasks, "{0}/.airflow/airscooter.yml".format(root))
+    write_airflow_string(tasks, "{0}/.airflow/datablocks_dag.py")
