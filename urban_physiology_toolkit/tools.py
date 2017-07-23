@@ -123,6 +123,7 @@ def generate_data_package_from_glossary_entry(entry):
     """
     Given a glossary entry, returns a datapackage.json file for that entry.
     """
+    # TODO: Mark geospatial files complete as well. See also the tests.
     solo_csv_resource = entry['dataset'] == '.' and entry['preferred_format'] == 'csv'
 
     package = {
