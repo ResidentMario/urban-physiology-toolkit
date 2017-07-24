@@ -7,6 +7,7 @@ from ast import literal_eval
 import json
 import os
 from pathlib import Path
+import shutil
 
 
 def slugify(value):
@@ -237,3 +238,20 @@ def update_dag(root="."):
     if not os.path.isdir("{0}/.airflow/dags/".format(root)):
         os.mkdir("{0}/.airflow/dags/".format(root))
     write_airflow_string(tasks, "{0}/.airflow/dags/airscooter_dag.py".format(root))
+
+
+def finalize_catalog(root="."):
+    """
+    Finalizes the catalog by removing any catalog and task folders that are in an incomplete state.
+
+    Note that to truly finalize the DAG, you will also need to run `update_dag` again.
+    """
+    catalog_folders = os.listdir("{0}/catalog".format(root))
+
+    for folder in catalog_folders:
+        with open("{0}/catalog/{1}/datapackage.json".format(root, folder), "r") as f:
+            dp = json.load(f)
+
+        if not dp['complete']:
+            shutil.rmtree("{0}/catalog/{1}".format(root, folder))
+            shutil.rmtree("{0}/tasks/{1}".format(root, folder))

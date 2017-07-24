@@ -1,0 +1,238 @@
+[
+    {
+        "last_updated": "2017-02-10 16:38:13+00:00",
+        "sources": [
+            "Department of Education (DOE)"
+        ],
+        "description": "2009 school survey with ratings in categories such as parental academic expectations, teacher academic expectations, student engagement, safety, and other categories",
+        "preferred_format": "xls",
+        "protocol": "https",
+        "keywords_provided": [
+            "department of education",
+            "lifelong learning",
+            "survey",
+            "learning",
+            "elementary",
+            "junior high school",
+            "high school",
+            "is",
+            "jhs",
+            "p.s.",
+            "schools",
+            "school",
+            "board of ed",
+            "education"
+        ],
+        "resource": "https://data.cityofnewyork.us/download/ens7-ac7e/application%2Fzip",
+        "dataset": "2009 Survey Data Dictionary.xls",
+        "column_names": [],
+        "created": "2011-08-30 17:23:12+00:00",
+        "flags": [],
+        "page_views": 238,
+        "name": "2009 School Survey",
+        "filesize": 203.0322265625,
+        "preferred_mimetype": "application/vnd.ms-excel",
+        "landing_page": "https://data.cityofnewyork.us/d/ens7-ac7e",
+        "topics_provided": [
+            "Education"
+        ]
+    },
+    {
+        "last_updated": "2017-02-10 16:38:13+00:00",
+        "sources": [
+            "Department of Education (DOE)"
+        ],
+        "description": "2009 school survey with ratings in categories such as parental academic expectations, teacher academic expectations, student engagement, safety, and other categories",
+        "preferred_format": "txt",
+        "protocol": "https",
+        "keywords_provided": [
+            "department of education",
+            "lifelong learning",
+            "survey",
+            "learning",
+            "elementary",
+            "junior high school",
+            "high school",
+            "is",
+            "jhs",
+            "p.s.",
+            "schools",
+            "school",
+            "board of ed",
+            "education"
+        ],
+        "resource": "https://data.cityofnewyork.us/download/ens7-ac7e/application%2Fzip",
+        "dataset": "Masterfile09_d75.txt",
+        "column_names": [],
+        "created": "2011-08-30 17:23:12+00:00",
+        "flags": [],
+        "page_views": 238,
+        "name": "2009 School Survey",
+        "filesize": 283.1591796875,
+        "preferred_mimetype": "text/plain",
+        "landing_page": "https://data.cityofnewyork.us/d/ens7-ac7e",
+        "topics_provided": [
+            "Education"
+        ]
+    },
+    {
+        "last_updated": "2017-02-10 16:38:13+00:00",
+        "sources": [
+            "Department of Education (DOE)"
+        ],
+        "description": "2009 school survey with ratings in categories such as parental academic expectations, teacher academic expectations, student engagement, safety, and other categories",
+        "preferred_format": "txt",
+        "protocol": "https",
+        "keywords_provided": [
+            "department of education",
+            "lifelong learning",
+            "survey",
+            "learning",
+            "elementary",
+            "junior high school",
+            "high school",
+            "is",
+            "jhs",
+            "p.s.",
+            "schools",
+            "school",
+            "board of ed",
+            "education"
+        ],
+        "resource": "https://data.cityofnewyork.us/download/ens7-ac7e/application%2Fzip",
+        "dataset": "masterfile09_gened.txt",
+        "column_names": [],
+        "created": "2011-08-30 17:23:12+00:00",
+        "flags": [],
+        "page_views": 238,
+        "name": "2009 School Survey",
+        "filesize": 6699.587890625,
+        "preferred_mimetype": "text/plain",
+        "landing_page": "https://data.cityofnewyork.us/d/ens7-ac7e",
+        "topics_provided": [
+            "Education"
+        ]
+    },
+    {
+        "last_updated": "2017-02-10 16:38:13+00:00",
+        "sources": [
+            "Department of Education (DOE)"
+        ],
+        "description": "2009 school survey with ratings in categories such as parental academic expectations, teacher academic expectations, student engagement, safety, and other categories",
+        "preferred_format": "xls",
+        "protocol": "https",
+        "keywords_provided": [
+            "department of education",
+            "lifelong learning",
+            "survey",
+            "learning",
+            "elementary",
+            "junior high school",
+            "high school",
+            "is",
+            "jhs",
+            "p.s.",
+            "schools",
+            "school",
+            "board of ed",
+            "education"
+        ],
+        "resource": "https://data.cityofnewyork.us/download/ens7-ac7e/application%2Fzip",
+        "dataset": "Survey_09_D75_Overall.xls",
+        "column_names": [],
+        "created": "2011-08-30 17:23:12+00:00",
+        "flags": [],
+        "page_views": 238,
+        "name": "2009 School Survey",
+        "filesize": 208.5322265625,
+        "preferred_mimetype": "application/vnd.ms-office",
+        "landing_page": "https://data.cityofnewyork.us/d/ens7-ac7e",
+        "topics_provided": [
+            "Education"
+        ]
+    },
+    {
+        "last_updated": "2017-02-10 16:38:13+00:00",
+        "sources": [
+            "Department of Education (DOE)"
+        ],
+        "description": "2009 school survey with ratings in categories such as parental academic expectations, teacher academic expectations, student engagement, safety, and other categories",
+        "preferred_format": "xls",
+        "protocol": "https",
+        "keywords_provided": [
+            "department of education",
+            "lifelong learning",
+            "survey",
+            "learning",
+            "elementary",
+            "junior high school",
+            "high school",
+            "is",
+            "jhs",
+            "p.s.",
+            "schools",
+            "school",
+            "board of ed",
+            "education"
+        ],
+        "resource": "https://data.cityofnewyork.us/download/ens7-ac7e/application%2Fzip",
+        "dataset": "Survey_09_GenEd_Overall.xls",
+        "column_names": [],
+        "created": "2011-08-30 17:23:12+00:00",
+        "flags": [],
+        "page_views": 238,
+        "name": "2009 School Survey",
+        "filesize": 967.0322265625,
+        "preferred_mimetype": "application/vnd.ms-excel",
+        "landing_page": "https://data.cityofnewyork.us/d/ens7-ac7e",
+        "topics_provided": [
+            "Education"
+        ]
+    },
+    {
+        "columns": 3,
+        "flags": [],
+        "page_views": 1521,
+        "resource": "https://data.cityofnewyork.us/api/views/9cw8-7heb/rows.csv?accessType=DOWNLOAD",
+        "preferred_mimetype": "text/csv",
+        "sources": [
+            "Department of Information Technology & Telecommunications (DoITT)"
+        ],
+        "description": "A list of all .nyc domains registered along with the registration date and registrant type. This list is updated daily.",
+        "name": ".nyc Domain Registrations",
+        "keywords_provided": [
+            "web",
+            "internet",
+            ".nyc",
+            "registration",
+            "page",
+            "webpage",
+            "website",
+            "site",
+            "domain"
+        ],
+        "rows": 73900,
+        "topics_provided": [
+            "Business"
+        ],
+        "preferred_format": "csv",
+        "column_names": [
+            "Domain Registration Date ",
+            "Domain Name ",
+            "Nexus Category"
+        ],
+        "landing_page": "https://data.cityofnewyork.us/d/9cw8-7heb",
+        "last_updated": "2017-05-31 21:08:56+00:00",
+        "dataset": ".",
+        "protocol": "https",
+        "created": "2015-07-13 18:48:56+00:00",
+        "available_formats": [
+            "csv",
+            "json",
+            "rdf",
+            "rss",
+            "tsv",
+            "xml"
+        ]
+    }
+]

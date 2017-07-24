@@ -11,7 +11,8 @@ import shutil
 
 import sys; sys.path.insert(0, './../')
 # noinspection PyUnresolvedReferences
-from urban_physiology_toolkit.workflow_utils import (init_catalog, generate_data_package_from_glossary_entry)
+from urban_physiology_toolkit.workflow_utils import (init_catalog, generate_data_package_from_glossary_entry,
+                                                     finalize_catalog)
 
 
 class TestGeneratingDataPackagesFromGlossaryEntries(unittest.TestCase):
@@ -140,6 +141,35 @@ class TestFullInitializationIO(unittest.TestCase):
 
         assert n_catalog == n_expected
         assert n_tasks == n_expected
+
+    def tearDown(self):
+        shutil.rmtree("temp")
+
+
+class TestFinalization(unittest.TestCase):
+    """
+    Test that finalization works as expected.
+    """
+
+    def setUp(self):
+        os.mkdir("temp")
+
+    def test_init(self):
+        init_catalog("./data/double_resource_glossary.json", "temp")
+
+        with open("./data/double_resource_glossary.json", "r") as f:
+            glossary = json.load(f)
+
+        catalog_before = len(os.listdir("./temp/catalog"))
+        tasks_before = len(os.listdir("./temp/tasks"))
+
+        finalize_catalog("temp")
+
+        catalog_after = len(os.listdir("./temp/catalog"))
+        tasks_after = len(os.listdir("./temp/tasks"))
+
+        assert catalog_before != catalog_after
+        assert tasks_before != tasks_after
 
     def tearDown(self):
         shutil.rmtree("temp")
