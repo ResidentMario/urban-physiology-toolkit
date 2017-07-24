@@ -157,7 +157,7 @@ outputs = ["{1}"]
             dataset_filepath = "{0}/catalog/{1}/{2}".format(root, resource_folder_name, data_filename)
 
             with open(catalog_filepath + "/datapackage.json", "w") as f:
-                json.dumps(generate_data_package_from_glossary_entry(entry), indent=4)
+                f.write(json.dumps(generate_data_package_from_glossary_entry(entry), indent=4))
 
             if entry['dataset'] == "." and entry['preferred_format'] in ["csv", "geojson"]:  # Case 1
                 pass
@@ -233,4 +233,7 @@ def update_dag(root="."):
     from airscooter.orchestration import (serialize_to_file, write_airflow_string)
 
     serialize_to_file(tasks, "{0}/.airflow/airscooter.yml".format(root))
-    write_airflow_string(tasks, "{0}/.airflow/datablocks_dag.py".format(root))
+
+    if not os.path.isdir("{0}/.airflow/dags/".format(root)):
+        os.mkdir("{0}/.airflow/dags/".format(root))
+    write_airflow_string(tasks, "{0}/.airflow/dags/airscooter_dag.py".format(root))
