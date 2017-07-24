@@ -192,15 +192,16 @@ def update_dag(root="."):
     tasks = []
 
     for folder in resource_folders:
-        tasks = os.listdir("{0}/tasks/{1}".format(root, folder))
+
+        todo = os.listdir("{0}/tasks/{1}".format(root, folder))
 
         # TODO: Allow {py, ipynb, sh} tasks.
-        if "depositor.py" in tasks:
+        if "depositor.py" in todo:
             name = "{0}-depositor".format(folder)
             filename = "{0}/tasks/{1}/depositor.py".format(root, folder)
 
             with open(filename, "r") as f:
-                outputs = literal_eval(f.readlines()[-1])
+                outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip())
 
             def munge_path(path):
                 # TODO: Flag relative-versus-absolute better.
@@ -212,21 +213,24 @@ def update_dag(root="."):
 
             outputs = [munge_path(path) for path in outputs]
 
-            dep = Depositor(name, filename, outputs)
+            py_name = "var_" + name.replace("-", "_")  # clean up the URL slug name so that it can be used as a var
+            dep = Depositor(py_name, filename, outputs)
             tasks.append(dep)
 
-        if "transform.py" in tasks:
+        if "transform.py" in todo:
             name = "{0}-transform".format(folder)
-            filename = "{0}/tasks/{1}/transform.py"
+            filename = "{0}/tasks/{1}/transform.py".format(root, folder)
+            depositor_prior = tasks[-1]
             inputs = tasks[-1].output
 
             with open(filename, "r") as f:
-                outputs = literal_eval(f.readlines()[-1])
+                outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip())
 
-            trans = Transform(name, filename, inputs, outputs, requirements=inputs)
+            py_name = "var_" + name.replace("-", "_")  # clean up the URL slug name so that it can be used as a var
+            trans = Transform(py_name, filename, inputs, outputs, requirements=[depositor_prior])
             tasks.append(trans)
 
-    from airscooter.orchestration import serialize_to_file, write_airflow_string
+    from airscooter.orchestration import (serialize_to_file, write_airflow_string)
 
     serialize_to_file(tasks, "{0}/.airflow/airscooter.yml".format(root))
-    write_airflow_string(tasks, "{0}/.airflow/datablocks_dag.py")
+    write_airflow_string(tasks, "{0}/.airflow/datablocks_dag.py".format(root))
