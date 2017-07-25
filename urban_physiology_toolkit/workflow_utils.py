@@ -191,6 +191,13 @@ def update_dag(root="."):
     resource_folders = os.listdir("{0}/tasks/".format(root))
     tasks = []
 
+    def munge_path(path):
+        """Helper function. Makes relative filepaths absolute."""
+        if os.path.isabs(path):
+            return path
+        else:
+            return str(Path("{0}/catalog/{1}/{2}".format(root, folder, filename)).resolve())
+
     for folder in resource_folders:
 
         todo = os.listdir("{0}/tasks/{1}".format(root, folder))
@@ -202,14 +209,6 @@ def update_dag(root="."):
 
             with open(filename, "r") as f:
                 outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip())
-
-            def munge_path(path):
-                # TODO: Flag relative-versus-absolute better.
-                # Make relative filepaths absolute.
-                if "/" not in path:
-                    return str(Path("{0}/catalog/{1}/{2}".format(root, folder, filename)).resolve())
-                else:
-                    return path
 
             outputs = [munge_path(path) for path in outputs]
 
@@ -225,6 +224,8 @@ def update_dag(root="."):
 
             with open(filename, "r") as f:
                 outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip())
+
+            outputs = [munge_path(path) for path in outputs]
 
             py_name = "var_" + name.replace("-", "_")  # clean up the URL slug name so that it can be used as a var
             trans = Transform(py_name, filename, inputs, outputs, requirements=[depositor_prior])

@@ -169,7 +169,7 @@ class TestFullInitializationIO(unittest.TestCase):
 
 class TestFinalization(unittest.TestCase):
     """
-    Test that finalization works as expected.
+    Tests that finalization works as expected.
     """
 
     def setUp(self):
