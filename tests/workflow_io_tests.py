@@ -178,9 +178,6 @@ class TestFinalization(unittest.TestCase):
     def test_init(self):
         init_catalog("./data/double_resource_glossary.json", "temp")
 
-        with open("./data/double_resource_glossary.json", "r") as f:
-            glossary = json.load(f)
-
         catalog_before = len(os.listdir("./temp/catalog"))
         tasks_before = len(os.listdir("./temp/tasks"))
 
@@ -189,6 +186,7 @@ class TestFinalization(unittest.TestCase):
         catalog_after = len(os.listdir("./temp/catalog"))
         tasks_after = len(os.listdir("./temp/tasks"))
 
+        # TODO: This is a bit lazy. Improve this test.
         assert catalog_before != catalog_after
         assert tasks_before != tasks_after
 

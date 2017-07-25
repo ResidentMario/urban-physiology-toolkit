@@ -83,10 +83,21 @@ class TestBashFormat(unittest.TestCase):
         os.mkdir("temp/.airflow/")
         init_catalog("./data/blob_resource_glossary.json", "temp")
 
-    def test_ipynb(self):
-        pass
-        # TODO: Implement! Write in model Bash depositor and transform shell scripts, then make sure update_dag runs.
-        # update_dag(root="./temp")
+    def test_bash(self):
+        # Replace the base Python depositor and transform with model Bash ones.
+        os.remove("temp/tasks/2009-school-survey/depositor.py")
+        with open("temp/tasks/2009-school-survey/depositor.sh", "w") as f:
+            f.write("wget https://data.cityofnewyork.us/download/ens7-ac7e/application%2Fzip -O data.zip\n"
+                    "OUTPUT=(data.zip)")
+
+        os.remove("temp/tasks/2009-school-survey/transform.py")
+        with open("temp/tasks/2009-school-survey/transform.sh", "w") as f:
+            f.write("unzip data.zip -d .\n"
+                    "OUTPUT=(foo.csv bar.csv)")
+
+        # TODO: Keep working on this one.
+        import pdb; pdb.set_trace()
+        update_dag(root="./temp")
 
         # assert set(os.listdir("./temp/.airflow")) == {'airscooter.yml', 'datablocks_dag.py'}
         # assert os.path.exists("./temp/.airflow/dags/airscooter_dag.py")

@@ -203,12 +203,29 @@ def update_dag(root="."):
         todo = os.listdir("{0}/tasks/{1}".format(root, folder))
 
         # TODO: Allow {py, ipynb, sh} tasks.
-        if "depositor.py" in todo:
+        try:
+            depositor = next(f for f in todo if "depositor" in f)
+        except StopIteration:
+            depositor = None
+        try:
+            transform = next(f for f in todo if "transform" in f)
+        except StopIteration:
+            transform = None
+
+        if depositor:
             name = "{0}-depositor".format(folder)
-            filename = "{0}/tasks/{1}/depositor.py".format(root, folder)
+            filename = "{0}/tasks/{1}/{2}".format(root, folder, depositor)
+
+            format = depositor.rsplit(".")[-1]
 
             with open(filename, "r") as f:
-                outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip())
+                if format == 'py':
+                    outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip())  # list
+                elif format == 'sh':
+                    # TODO: This kind of requires pattern matching...
+                    outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip().replace(" ", ","))  # tuple
+                else:  # ipynb
+                    raise NotImplementedError("IPYNB workflow tasks have not been implemented yet.")
 
             outputs = [munge_path(path) for path in outputs]
 
@@ -216,14 +233,20 @@ def update_dag(root="."):
             dep = Depositor(py_name, filename, outputs)
             tasks.append(dep)
 
-        if "transform.py" in todo:
+        if transform:
             name = "{0}-transform".format(folder)
-            filename = "{0}/tasks/{1}/transform.py".format(root, folder)
+            filename = "{0}/tasks/{1}/{2}".format(root, folder, transform)
             depositor_prior = tasks[-1]
             inputs = tasks[-1].output
 
             with open(filename, "r") as f:
-                outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip())
+                if format == 'py':
+                    outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip())  # list
+                elif format == 'sh':
+                    # TODO: This kind of requires pattern matching...cf. the above.
+                    outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip().replace(" ", ","))  # tuple
+                else:  # ipynb
+                    raise NotImplementedError("IPYNB workflow tasks have not been implemented yet.")
 
             outputs = [munge_path(path) for path in outputs]
 
