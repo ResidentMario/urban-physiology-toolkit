@@ -30,6 +30,9 @@ class TestGeneratingDataPackagesFromGlossaryEntries(unittest.TestCase):
                             'version', 'preferred_format', 'maintainers', 'publishers', 'complete'}
 
     def test_csv(self):
+        """
+        Tests that data packages are generated for CSV files, and that the resultant package is marked complete.
+        """
         with open("data/csv_glossary_entry.json", "r") as f:
             glossary_entry = json.load(f)
 
@@ -39,8 +42,26 @@ class TestGeneratingDataPackagesFromGlossaryEntries(unittest.TestCase):
         assert 'url' in result['resources'][0]
         assert result['complete']
 
-    def test_generic(self):
-        with open("data/non_csv_glossary_entry.json", "r") as f:
+    # def test_geojson(self):
+    #     """
+    #     Tests that data packages are generated for CSV files, and that the resultant package is marked complete.
+    #     """
+    #     with open("data/geojson_glossary_entry.json", "r") as f:
+    #         glossary_entry = json.load(f)
+    #
+    #     result = generate_data_package_from_glossary_entry(glossary_entry)
+    #     assert set(result.keys()) == self.common_keys
+    #     assert result['resources'][0]['path'] == 'data.csv'
+    #     assert 'url' in result['resources'][0]
+    #     assert result['complete']
+
+    def test_xls(self):
+        """
+        Tests that data packages are generated for XLS files, and that the resultant package is marked incomplete.
+        XLS here is a stand-in for any data type that is "generic" in the sense that no complete depositor is written
+        for it by the automatic scripts.
+        """
+        with open("data/xls_glossary_entry.json", "r") as f:
             glossary_entry = json.load(f)
 
         result = generate_data_package_from_glossary_entry(glossary_entry)

@@ -1,0 +1,31 @@
+{
+    "landing_page": "https://data.cityofnewyork.us/d/ghq4-ydq4",
+    "name": "2017-2018 School Zones",
+    "dataset": ".",
+    "description": "2017-2018 School Zones (as of April 24, 2017). Files are in a GIS Shapefile format. They are broken down by elementary school zones (NYC_E) and middle school zones (NYC_M)",
+    "filesize": 4478.689453125,
+    "column_names": [],
+    "created": "2017-05-01 21:27:51+00:00",
+    "keywords_provided": [
+        "school zones",
+        "elementary school",
+        "middle school",
+        "maps",
+        "education",
+        "doe",
+        "shapefile"
+    ],
+    "preferred_format": "geojson",
+    "resource": "https://data.cityofnewyork.us/api/geospatial/ghq4-ydq4?method=export&format=GeoJSON",
+    "preferred_mimetype": "application/vnd.geo+json",
+    "page_views": 117,
+    "sources": [
+        "Department of Education (DOE)"
+    ],
+    "protocol": "https",
+    "flags": [],
+    "last_updated": "2017-05-01 21:34:37+00:00",
+    "topics_provided": [
+        "Education"
+    ]
+}
