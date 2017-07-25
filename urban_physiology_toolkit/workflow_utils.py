@@ -29,8 +29,7 @@ def generate_data_package_from_glossary_entry(entry):
     """
     Given a glossary entry, returns a datapackage.json file for that entry.
     """
-    # TODO: Mark geospatial files complete as well. See also the tests.
-    solo_csv_resource = entry['dataset'] == '.' and entry['preferred_format'] == 'csv'
+    no_transform_needed = entry['dataset'] == '.' and entry['preferred_format'] in ['csv', 'geojson']
 
     package = {
         # datapackage fields
@@ -54,7 +53,7 @@ def generate_data_package_from_glossary_entry(entry):
         'filesize': None if 'filesize' not in entry else entry['filesize'],
         'available_formats': None,
         # signal field
-        'complete': solo_csv_resource
+        'complete': no_transform_needed
     }
 
     # other glossary fields
@@ -63,7 +62,7 @@ def generate_data_package_from_glossary_entry(entry):
         package[field] = entry[field]
 
     # populate the resources field directly, if appropriate.
-    if solo_csv_resource:
+    if no_transform_needed:
         package['resources'] = [
             {'path': 'data.csv', 'url': entry['resource']}
         ]

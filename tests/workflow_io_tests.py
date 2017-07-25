@@ -42,18 +42,18 @@ class TestGeneratingDataPackagesFromGlossaryEntries(unittest.TestCase):
         assert 'url' in result['resources'][0]
         assert result['complete']
 
-    # def test_geojson(self):
-    #     """
-    #     Tests that data packages are generated for CSV files, and that the resultant package is marked complete.
-    #     """
-    #     with open("data/geojson_glossary_entry.json", "r") as f:
-    #         glossary_entry = json.load(f)
-    #
-    #     result = generate_data_package_from_glossary_entry(glossary_entry)
-    #     assert set(result.keys()) == self.common_keys
-    #     assert result['resources'][0]['path'] == 'data.csv'
-    #     assert 'url' in result['resources'][0]
-    #     assert result['complete']
+    def test_geojson(self):
+        """
+        Tests that data packages are generated for CSV files, and that the resultant package is marked complete.
+        """
+        with open("data/geojson_glossary_entry.json", "r") as f:
+            glossary_entry = json.load(f)
+
+        result = generate_data_package_from_glossary_entry(glossary_entry)
+        assert set(result.keys()) == self.common_keys
+        assert result['resources'][0]['path'] == 'data.csv'
+        assert 'url' in result['resources'][0]
+        assert result['complete']
 
     def test_xls(self):
         """
