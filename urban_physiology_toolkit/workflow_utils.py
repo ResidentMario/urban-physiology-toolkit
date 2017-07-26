@@ -71,7 +71,7 @@ def generate_data_package_from_glossary_entry(entry):
     return package
 
 
-def init_catalog(glossary_filepath, root):
+def init_catalog(glossary_filepath, root, max_filesize=None, max_columns=None):
     """
     Initializes a catalog's folder structure for the given glossary at the given root folder.
     """
@@ -90,6 +90,15 @@ def init_catalog(glossary_filepath, root):
     # Read in the glossary.
     with open(glossary_filepath, "r") as f:
         glossary = json.load(f)
+
+    # Filter by size.
+    if max_filesize is not None:
+        glossary = [resource for resource in glossary if (('filesize' not in resource) or
+                                                          (('s' not in str(resource['filesize']) and
+                                                          (resource['filesize'] < max_filesize))))]
+    if max_columns is not None:
+        glossary = [resource for resource in glossary if (('columns' in resource and resource['columns'] < max_columns)
+                                                          or 'columns' not in resource)]
 
     # Resource names are not necessarily unique; only resource URLs are. We need to modify our resource names
     # as we go along to ensure that all of our elements end up in the right places, folder-wise.
@@ -227,7 +236,6 @@ def update_dag(root="."):
 
         todo = os.listdir("{0}/tasks/{1}".format(root, folder))
 
-        # TODO: Allow {py, ipynb, sh} tasks.
         try:
             depositor = next(f for f in todo if "depositor" in f)
         except StopIteration:

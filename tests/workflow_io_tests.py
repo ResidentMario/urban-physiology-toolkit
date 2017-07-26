@@ -135,6 +135,60 @@ class TestRepeatedResourceNameIO(unittest.TestCase):
         shutil.rmtree("temp")
 
 
+class TestFilteringByFilesize(unittest.TestCase):
+    """
+    Ascertains that filtering out glossary entries larger than the inputted size works as expected.
+    """
+    def setUp(self):
+        os.mkdir("temp")
+
+    def test_init(self):
+        init_catalog("./data/blob_resource_glossary.json", "temp", max_filesize=0)
+
+        with open("./data/blob_resource_glossary.json", "r") as f:
+            glossary = json.load(f)
+
+        catalog_folders = os.listdir("./temp/catalog")
+        task_folders = os.listdir("./temp/tasks")
+
+        n_catalog = len(catalog_folders)
+        n_tasks = len(task_folders)
+        n_all = len(set([entry['resource'] for entry in glossary]))
+
+        assert n_catalog < n_all
+        assert n_tasks < n_all
+
+    def tearDown(self):
+        shutil.rmtree("temp")
+
+
+class TestFilteringByNColumns(unittest.TestCase):
+    """
+    Ascertains that filtering out glossary entries with more than a certain number of columnar entries works.
+    """
+    def setUp(self):
+        os.mkdir("temp")
+
+    def test_init(self):
+        init_catalog("./data/csv_glossary.json", "temp", max_columns=0)
+
+        with open("./data/csv_glossary.json", "r") as f:
+            glossary = json.load(f)
+
+        catalog_folders = os.listdir("./temp/catalog")
+        task_folders = os.listdir("./temp/tasks")
+
+        n_catalog = len(catalog_folders)
+        n_tasks = len(task_folders)
+        n_all = len(set([entry['resource'] for entry in glossary]))
+
+        assert n_catalog < n_all
+        assert n_tasks < n_all
+
+    def tearDown(self):
+        shutil.rmtree("temp")
+
+
 class TestFullInitializationIO(unittest.TestCase):
     """
     Smoke test. Makes sure that folder initialization fires and works for a large glossary---in this case,
