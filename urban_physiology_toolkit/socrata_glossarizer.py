@@ -10,6 +10,7 @@ from tqdm import tqdm
 from .glossarizer_utils import (_preexisting_cache, _load_glossary_todo,
                                 _write_resource_file, _write_glossary_file)
 from selenium.common.exceptions import TimeoutException
+import multiprocessing as mp
 
 
 def _resourcify(metadata, domain, endpoint_type):
@@ -175,7 +176,7 @@ def _glossarize_table(resource, domain, driver=None, timeout=60):
     return [glossarized_resource]
 
 
-def _get_sizings(uri, q, timeout=60):
+def _get_sizings(uri, timeout=60):
     """
     Given a URI and a multiprocessing.Queue, returns a structured dict explaining file size and type if download is
     successful, and None if the download process times out (takes too long).
@@ -203,23 +204,16 @@ def _get_sizings(uri, q, timeout=60):
     return _size_up(uri)
 
 
-def _glossarize_nontable(resource, timeout, q=None):
+def _glossarize_nontable(resource, timeout):
     """
     Same as `glossarize_table`, but for the non-table resource types.
     """
-    import limited_process
-    # TODO: Remove limited_process non-dependency.
-
     import zipfile
     from requests.exceptions import ChunkedEncodingError
 
-    if not bool(q):
-        q = limited_process.q()
-
     try:
         sizings = _get_sizings(
-            resource['resource'],
-            q, timeout=timeout
+            resource['resource'], timeout=timeout
         )
     except zipfile.BadZipfile:
         # cf. https://github.com/ResidentMario/datafy/issues/2
@@ -325,11 +319,10 @@ def get_glossary(resource_list, glossary, domain='opendata.cityofnewyork.us', en
         # geospatial datasets, blobs, links:
         # ...
         else:
-            import limited_process
-            q = limited_process.q()
+            q = mp.Queue()
 
             for resource in tqdm(list(resource_list)):
-                glossarized_resource = _glossarize_nontable(resource, timeout, q=q)
+                glossarized_resource = _glossarize_nontable(resource, timeout)
                 glossary += glossarized_resource
 
                 # Update the resource list to make note of the fact that this job has been processed.
