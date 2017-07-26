@@ -41,7 +41,7 @@ def generate_data_package_from_glossary_entry(entry):
         'keywords': entry['keywords_provided'],
         'description': entry['description'],
         'licenses': [],
-        'sources': [{'name': source, 'web': 'https://example.com'} for source in entry['sources']],
+        'sources': [{'name': source, 'web': None} for source in entry['sources']],
         'contributors': [],
         'maintainers': [],
         'publishers': [],
@@ -53,6 +53,8 @@ def generate_data_package_from_glossary_entry(entry):
         'columns': None if 'columns' not in entry else entry['columns'],
         'filesize': None if 'filesize' not in entry else entry['filesize'],
         'available_formats': None,
+        # TODO: mirror this field in the glossary
+        'metadata': [],
         # signal field
         'complete': no_transform_needed
     }
