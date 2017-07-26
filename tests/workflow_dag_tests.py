@@ -9,7 +9,6 @@ import shutil
 import sys; sys.path.insert(0, './../')
 # noinspection PyUnresolvedReferences
 from urban_physiology_toolkit.workflow_utils import (init_catalog, update_dag)
-# from airscooter.orchestration import configure
 
 
 class TestSimpleResourceDAGSmokeTest(unittest.TestCase):
@@ -40,6 +39,7 @@ class TestSimpleResourceDAGSmokeTest(unittest.TestCase):
 # ascertaining that the files we write actually work is fairly easy to do via visual inspection, and observing the
 # external state of running these jobs without introducing network dependencies would generally be pretty tedious
 # to implement.
+# TODO: Implement those tests anyway.
 
 class TestPythonFormat(unittest.TestCase):
     def setUp(self):
@@ -65,13 +65,17 @@ class TestIPYNBFormat(unittest.TestCase):
         init_catalog("./data/blob_resource_glossary.json", "temp")
 
     def test_ipynb(self):
-        pass
-        # TODO: Implement! Write in model Jupyter depositor and transform notebooks, then make sure update_dag runs.
-        # update_dag(root="./temp")
+        os.remove("temp/tasks/2009-school-survey/depositor.py")
+        shutil.copy("fixtures/depositor.ipynb", "temp/tasks/2009-school-survey/depositor.ipynb")
 
-        # assert set(os.listdir("./temp/.airflow")) == {'airscooter.yml', 'datablocks_dag.py'}
-        # assert os.path.exists("./temp/.airflow/dags/airscooter_dag.py")
-        # assert set(os.listdir("./temp/tasks/2009-school-survey")) == {'depositor.py', 'transform.py'}
+        os.remove("temp/tasks/2009-school-survey/transform.py")
+        shutil.copy("fixtures/transform.ipynb", "temp/tasks/2009-school-survey/transform.ipynb")
+
+        update_dag(root="./temp")
+
+        assert set(os.listdir("./temp/.airflow")) == {'airscooter.yml', 'dags'}
+        assert os.path.exists("./temp/.airflow/dags/airscooter_dag.py")
+        assert set(os.listdir("./temp/tasks/2009-school-survey")) == {'depositor.ipynb', 'transform.ipynb'}
 
     def tearDown(self):
         shutil.rmtree("temp")
@@ -85,6 +89,7 @@ class TestBashFormat(unittest.TestCase):
 
     def test_bash(self):
         # Replace the base Python depositor and transform with model Bash ones.
+
         os.remove("temp/tasks/2009-school-survey/depositor.py")
         with open("temp/tasks/2009-school-survey/depositor.sh", "w") as f:
             f.write("wget https://data.cityofnewyork.us/download/ens7-ac7e/application%2Fzip -O data.zip\n"
@@ -95,13 +100,11 @@ class TestBashFormat(unittest.TestCase):
             f.write("unzip data.zip -d .\n"
                     "OUTPUT=(foo.csv bar.csv)")
 
-        # TODO: Keep working on this one.
-        import pdb; pdb.set_trace()
         update_dag(root="./temp")
 
-        # assert set(os.listdir("./temp/.airflow")) == {'airscooter.yml', 'datablocks_dag.py'}
-        # assert os.path.exists("./temp/.airflow/dags/airscooter_dag.py")
-        # assert set(os.listdir("./temp/tasks/2009-school-survey")) == {'depositor.py', 'transform.py'}
+        assert set(os.listdir("./temp/.airflow")) == {'airscooter.yml', 'dags'}
+        assert os.path.exists("./temp/.airflow/dags/airscooter_dag.py")
+        assert set(os.listdir("./temp/tasks/2009-school-survey")) == {'depositor.sh', 'transform.sh'}
 
     def tearDown(self):
         shutil.rmtree("temp")

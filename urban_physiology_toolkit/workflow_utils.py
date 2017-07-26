@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import nbformat
 
 
 def slugify(value):
@@ -196,7 +197,31 @@ def update_dag(root="."):
         if os.path.isabs(path):
             return path
         else:
-            return str(Path("{0}/catalog/{1}/{2}".format(root, folder, filename)).resolve())
+            return str(Path(path).resolve())
+
+    def read_output(fp):
+        """Helper function. Reads and returns task outputs."""
+        format = fp.rsplit(".")[-1]
+        with open(filename, "r") as f:
+            if format == 'py':
+                last_line = f.readlines()[-1]
+                outputs = literal_eval(last_line.split("=")[-1].strip())
+            elif format == 'sh':
+                last_line = f.readlines()[-1]
+                array = last_line.split("=")[-1].strip().replace("(", "").replace(")", "")
+                # Bash arrays may contain variables both with and without quotation strings.
+                # e.g. OUTPUTS=(Foo Bar "Foo Bar") is legal, and needs to be mapped to ("Foo", "Bar", "Foo Bar").
+                vars = array.split(" ")
+                outputs = []
+                for var in vars:
+                    if len(var) > 0:  # avoid parsing multi-spaces
+                        outputs.append(var.replace('"', '').replace("'", ''))
+            else:  # ipynb
+                nb = nbformat.read(fp, as_version=4)
+                last_line = nb['cells'][-1]['source']
+                outputs = literal_eval(last_line.split("=")[-1].strip())  # same as py at this point
+
+        return [munge_path(out) for out in outputs]
 
     for folder in resource_folders:
 
@@ -216,18 +241,7 @@ def update_dag(root="."):
             name = "{0}-depositor".format(folder)
             filename = "{0}/tasks/{1}/{2}".format(root, folder, depositor)
 
-            format = depositor.rsplit(".")[-1]
-
-            with open(filename, "r") as f:
-                if format == 'py':
-                    outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip())  # list
-                elif format == 'sh':
-                    # TODO: This kind of requires pattern matching...
-                    outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip().replace(" ", ","))  # tuple
-                else:  # ipynb
-                    raise NotImplementedError("IPYNB workflow tasks have not been implemented yet.")
-
-            outputs = [munge_path(path) for path in outputs]
+            outputs = read_output(filename)
 
             py_name = "var_" + name.replace("-", "_")  # clean up the URL slug name so that it can be used as a var
             dep = Depositor(py_name, filename, outputs)
@@ -239,16 +253,7 @@ def update_dag(root="."):
             depositor_prior = tasks[-1]
             inputs = tasks[-1].output
 
-            with open(filename, "r") as f:
-                if format == 'py':
-                    outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip())  # list
-                elif format == 'sh':
-                    # TODO: This kind of requires pattern matching...cf. the above.
-                    outputs = literal_eval(f.readlines()[-1].split("=")[-1].strip().replace(" ", ","))  # tuple
-                else:  # ipynb
-                    raise NotImplementedError("IPYNB workflow tasks have not been implemented yet.")
-
-            outputs = [munge_path(path) for path in outputs]
+            outputs = read_output(filename)
 
             py_name = "var_" + name.replace("-", "_")  # clean up the URL slug name so that it can be used as a var
             trans = Transform(py_name, filename, inputs, outputs, requirements=[depositor_prior])
