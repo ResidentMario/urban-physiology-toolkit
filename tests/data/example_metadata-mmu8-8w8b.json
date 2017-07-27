@@ -1,0 +1,58 @@
+{
+  "resource" :
+    {
+      "nbe_fxf" : null,
+      "description" : "Information pertaining to MTA (Metropolitan Transportation Authority of the State of New York) subways, buses, commuter rail, bridges, and tunnels",
+      "type" : "href",
+      "obe_fxf" : null,
+      "download_count" : 13663,
+      "parent_fxf" : null,
+      "createdAt" : "2011-08-30T20:51:40.000Z",
+      "provenance" : "official",
+      "page_views" :
+        {
+          "page_views_total" : 32011,
+          "page_views_total_log" : 14.966325193888279,
+          "page_views_last_week_log" : 7.960001932068081,
+          "page_views_last_week" : 248,
+          "page_views_last_month_log" : 9.74819284958946,
+          "page_views_last_month" : 859
+        },
+      "columns_description" : [],
+      "name" : "MTA Data",
+      "attribution" : "Metropolitan Transportation Authority (MTA)",
+      "columns_name" : [],
+      "columns_field_name" : [],
+      "id" : "mmu8-8w8b",
+      "view_count" :
+        {
+          "page_views_total" : 32011,
+          "page_views_total_log" : 14.966325193888279,
+          "page_views_last_week_log" : 7.960001932068081,
+          "page_views_last_week" : 248,
+          "page_views_last_month_log" : 9.74819284958946,
+          "page_views_last_month" : 859
+        },
+      "updatedAt" : "2014-09-05T17:14:00.000Z"
+    },
+  "classification" :
+    {
+      "categories" : [ "transportation" ],
+      "tags" : [],
+      "domain_category" : "Transportation",
+      "domain_tags" :
+        [ "traffic", "clean web", "route", "schedules", "vehicles" ],
+      "domain_metadata" :
+        [
+          { "value" : "As needed", "key" : "Update_Update-Frequency" },
+          {
+            "value" : "Metropolitan Transportation Authority (MTA)",
+            "key" : "Dataset-Information_Agency"
+          }
+        ]
+    },
+  "metadata" : { "domain" : "data.cityofnewyork.us" },
+  "permalink" : "https://data.cityofnewyork.us/d/mmu8-8w8b",
+  "link" : "https://data.cityofnewyork.us/Transportation/MTA-Data/mmu8-8w8b",
+  "owner" : { "id" : "5fuc-pqz2", "display_name" : "NYC OpenData" }
+}

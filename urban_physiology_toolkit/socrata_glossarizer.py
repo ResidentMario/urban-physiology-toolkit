@@ -234,8 +234,8 @@ def _glossarize_nontable(resource, timeout):
         resource['flags'].append('error')
         return []
 
-    # If successful, append the result to the glossaries...
-    if sizings:
+    # If successful, append the result to the glossaries.
+    if sizings and sizings[0]['mimetype'] != 'text/html':
         glossarized_resource = []
 
         for sizing in sizings:
@@ -278,17 +278,20 @@ def _glossarize_nontable(resource, timeout):
 
         return glossarized_resource
 
+    elif sizings[0]['mimetype'] == 'text/html':
+        return []
+
     # If unsuccessful, append a signal result to the glossaries.
     else:
-        glossarized_resource = resource.copy()
+        glossarized_resource_element = resource.copy()
 
-        glossarized_resource['flags'] = [flag for flag in glossarized_resource['flags'] if
+        glossarized_resource_element['flags'] = [flag for flag in glossarized_resource_element['flags'] if
                                          flag != 'processed']
 
-        glossarized_resource["filesize"] = ">{0}s".format(str(timeout))
-        glossarized_resource['dataset'] = "."
+        glossarized_resource_element["filesize"] = ">{0}s".format(str(timeout))
+        glossarized_resource_element['dataset'] = "."
 
-        return glossarized_resource
+        return [glossarized_resource_element]
 
     # Either way, update the resource list to make note of the fact that this job has been processed.
     # if 'processed' not in resource['flags']:

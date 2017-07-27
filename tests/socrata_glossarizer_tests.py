@@ -6,9 +6,8 @@ import unittest
 import pytest
 import json
 
-import sys; sys.path.insert(0, './../')
-# noinspection PyUnresolvedReferences
-from glossarizers import socrata_glossarizer
+import sys; sys.path.insert(0, '../')
+from urban_physiology_toolkit import socrata_glossarizer
 import requests
 
 
@@ -18,9 +17,9 @@ class TestGetPortalMetadata(unittest.TestCase):
         # Test whether or not the metadata returned by our processor still fits the format of the metadata that we
         # expect from Socrata. Note that similar tests are a to-do for the pysocrata test suite.
 
-        tables = socrata_glossarizer.get_portal_metadata("data.cityofnewyork.us",
-                                                         "../../../auth/nyc-open-data.json",
-                                                         "table")
+        tables = socrata_glossarizer._get_portal_metadata("data.cityofnewyork.us",
+                                                          "auth/nyc-open-data.json",
+                                                          "table")
         assert len(tables) > 1000
 
         # Take an example dataset. Note that if this example dataset ever gets deleted, this test will fail,
@@ -28,7 +27,7 @@ class TestGetPortalMetadata(unittest.TestCase):
         toi = next(table for table in tables if table['permalink'].split("/")[-1] == "f4rp-2kvy")
 
         # Now make sure the schema is still the same.
-        assert set(toi.keys()) == {'permalink', 'link', 'metadata', 'resource', 'classification'}
+        assert set(toi.keys()) == {'permalink', 'link', 'metadata', 'resource', 'classification', 'owner'}
         assert isinstance(toi['permalink'], str)
         assert isinstance(toi['link'], str)
         assert set(toi['metadata'].keys()) == {'license', 'domain'}
@@ -47,7 +46,7 @@ class TestResourcify(unittest.TestCase):
         """
         with open("data/example_metadata-f4rp-2kvy.json", "r") as fp:
             toi_metadata = json.load(fp)
-        resource = socrata_glossarizer.resourcify(toi_metadata, domain="data.cityofnewyork.us", endpoint_type="table")
+        resource = socrata_glossarizer._resourcify(toi_metadata, domain="data.cityofnewyork.us", endpoint_type="table")
         assert resource.keys() == {'sources', 'flags', 'topics_provided', 'created', 'name', 'protocol', 'description',
                                    'column_names', 'page_views', 'resource', 'last_updated', 'keywords_provided',
                                    'landing_page'}
@@ -64,9 +63,9 @@ class TestGlossarizeTable(unittest.TestCase):
         expected it to be.
         """
         with open("data/example_metadata-f4rp-2kvy.json", "r") as fp:
-            resource = socrata_glossarizer.resourcify(json.load(fp), "data.cityofnewyork.us", "table")
+            resource = socrata_glossarizer._resourcify(json.load(fp), "data.cityofnewyork.us", "table")
 
-        glossarized_resource = socrata_glossarizer.glossarize_table(resource, "opendata.cityofnewyork.us")
+        glossarized_resource = socrata_glossarizer._glossarize_table(resource, "opendata.cityofnewyork.us")
         assert glossarized_resource[0].keys() == table_glossary_keys
 
 
@@ -79,12 +78,12 @@ class TestGetSizings(unittest.TestCase):
                                  "-707c785caa08?filename=Broadband%20Data%20Dig%20-%20Datasets.zip"
 
     def test_get_sizings_success_csv(self):
-        sizings = socrata_glossarizer.get_sizings(self.csv_test_uri, None, timeout=20)
+        sizings = socrata_glossarizer._get_sizings(self.csv_test_uri, timeout=20)
         assert sizings and len(sizings) != 0
 
     def test_get_sizings_success_zip(self):
         # More difficult problem than that of a single CSV file.
-        sizings = socrata_glossarizer.get_sizings(self.zip_test_uri, None, timeout=20)
+        sizings = socrata_glossarizer._get_sizings(self.zip_test_uri, timeout=20)
         assert sizings and len(sizings) != 0
 
     def test_get_sizing_fail(self):
@@ -93,7 +92,7 @@ class TestGetSizings(unittest.TestCase):
         the module depends on. See the notes in timeout_process for more details.
         """
         with pytest.raises(requests.exceptions.ChunkedEncodingError):
-            socrata_glossarizer.get_sizings(self.zip_fail_test_uri, None, timeout=1)
+            socrata_glossarizer._get_sizings(self.zip_fail_test_uri, timeout=1)
 
 
 nontable_glossary_keys = {'resource', 'column_names', 'created', 'page_views', 'landing_page', 'flags',
@@ -115,30 +114,28 @@ class TestGlossarizeNonTable(unittest.TestCase):
         with open("data/example_resource-q68s-8qxv.json", "r") as fp:
             resource = json.load(fp)
 
-        glossarized_resource = socrata_glossarizer.glossarize_nontable(resource, 20)
+        glossarized_resource = socrata_glossarizer._glossarize_nontable(resource, 20)
         assert glossarized_resource[0].keys() == nontable_glossary_keys
 
     def test_glossarize_nontable_geospatial_dataset(self):
         with open("data/example_metadata-ghq4-ydq4.json", "r") as fp:
-            resource = socrata_glossarizer.resourcify(json.load(fp), "data.cityofnewyork.us", "geospatial dataset")
+            resource = socrata_glossarizer._resourcify(json.load(fp), "data.cityofnewyork.us", "geospatial dataset")
 
-        glossarized_resource = socrata_glossarizer.glossarize_nontable(resource, 20)
+        glossarized_resource = socrata_glossarizer._glossarize_nontable(resource, 20)
         assert glossarized_resource[0].keys() == nontable_glossary_keys
 
-    def test_glossarize_link(self):
+    def test_glossarize_external_link(self):
         # For generating a new metadata entry for testing:
-        # links = socrata_glossarizer.get_portal_metadata("data.cityofnewyork.us",
-        #                                                 "../../../auth/nyc-open-data.json",
+        # links = socrata_glossarizer._get_portal_metadata("data.cityofnewyork.us",
+        #                                                 "auth/nyc-open-data.json",
         #                                                 "links")
-        # ...
-        with open("data/example_metadata-rnnj-5mmi.json", "r") as fp:
-            resource = socrata_glossarizer.resourcify(json.load(fp), "data.cityofnewyork.us", "link")
+        with open("data/example_metadata-mmu8-8w8b.json", "r") as fp:
+            resource = socrata_glossarizer._resourcify(json.load(fp), "data.cityofnewyork.us", "link")
 
-        glossarized_resource = socrata_glossarizer.glossarize_nontable(resource, 20)
-        assert glossarized_resource[0].keys() == nontable_glossary_keys
+        glossarized_resource = socrata_glossarizer._glossarize_nontable(resource, 20)
+        assert len(glossarized_resource) == 0
 
 
-# TODO: run all of the cases, make sure that everything works as expected.
 # TODO: refactor ckan_glossarizer.py.
 # TODO: write the tests for ckan_glossarizer.py.
 # TODO: rewrite all of the docstrings.

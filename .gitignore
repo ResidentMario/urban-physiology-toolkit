@@ -3,3 +3,4 @@ ghostdriver.log
 urban_physiology_toolkit.egg-info
 __pycache__
 .cache/
+tests/auth
