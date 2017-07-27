@@ -10,7 +10,6 @@ from tqdm import tqdm
 from .glossarizer_utils import (_preexisting_cache, _load_glossary_todo,
                                 _write_resource_file, _write_glossary_file)
 from selenium.common.exceptions import TimeoutException
-import multiprocessing as mp
 
 
 def _resourcify(metadata, domain, endpoint_type):
@@ -273,9 +272,6 @@ def _glossarize_nontable(resource, timeout):
 
                 glossarized_resource.append(glossarized_resource_element)
 
-                # # Update the resource list to make note of the fact that this job has been processed.
-                # resource['flags'].append("processed")
-
         return glossarized_resource
 
     elif sizings[0]['mimetype'] == 'text/html':
@@ -292,10 +288,6 @@ def _glossarize_nontable(resource, timeout):
         glossarized_resource_element['dataset'] = "."
 
         return [glossarized_resource_element]
-
-    # Either way, update the resource list to make note of the fact that this job has been processed.
-    # if 'processed' not in resource['flags']:
-    #     resource["flags"].append("processed")
 
 
 def get_glossary(resource_list, glossary, domain='opendata.cityofnewyork.us', endpoint_type="table", timeout=60):
@@ -322,8 +314,6 @@ def get_glossary(resource_list, glossary, domain='opendata.cityofnewyork.us', en
         # geospatial datasets, blobs, links:
         # ...
         else:
-            q = mp.Queue()
-
             for resource in tqdm(list(resource_list)):
                 glossarized_resource = _glossarize_nontable(resource, timeout)
                 glossary += glossarized_resource

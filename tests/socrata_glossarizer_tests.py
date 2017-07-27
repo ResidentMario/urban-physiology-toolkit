@@ -11,7 +11,6 @@ from urban_physiology_toolkit import socrata_glossarizer
 import requests
 
 
-# @slow
 class TestGetPortalMetadata(unittest.TestCase):
     def test_get_portal_metadata(self):
         # Test whether or not the metadata returned by our processor still fits the format of the metadata that we
@@ -51,23 +50,6 @@ class TestResourcify(unittest.TestCase):
                                    'column_names', 'page_views', 'resource', 'last_updated', 'keywords_provided',
                                    'landing_page'}
 
-table_glossary_keys = {'available_formats', 'resource', 'page_views', 'sources', 'created', 'description', 'protocol',
-                       'last_updated', 'dataset', 'column_names', 'rows', 'topics_provided', 'preferred_mimetype',
-                       'name', 'preferred_format', 'columns', 'flags', 'keywords_provided', 'landing_page'}
-
-
-class TestGlossarizeTable(unittest.TestCase):
-    def test_glossarize_table(self):
-        """
-        Test that the resource-to-glossaries method works in isolation and that the glossaries schema is what we
-        expected it to be.
-        """
-        with open("data/example_metadata-f4rp-2kvy.json", "r") as fp:
-            resource = socrata_glossarizer._resourcify(json.load(fp), "data.cityofnewyork.us", "table")
-
-        glossarized_resource = socrata_glossarizer._glossarize_table(resource, "opendata.cityofnewyork.us")
-        assert glossarized_resource[0].keys() == table_glossary_keys
-
 
 class TestGetSizings(unittest.TestCase):
     def setUp(self):
@@ -95,49 +77,66 @@ class TestGetSizings(unittest.TestCase):
             socrata_glossarizer._get_sizings(self.zip_fail_test_uri, timeout=1)
 
 
-nontable_glossary_keys = {'resource', 'column_names', 'created', 'page_views', 'landing_page', 'flags',
-                          'keywords_provided', 'name', 'description', 'last_updated', 'filesize', 'dataset',
-                          'preferred_format', 'protocol', 'sources', 'preferred_mimetype', 'topics_provided'}
-
-
-class TestGlossarizeNonTable(unittest.TestCase):
+class TestGlossarize(unittest.TestCase):
     """
     Test that the resource-to-glossaries method works in isolation and that the glossaries schema is what we
     expected it to be.
+
+    These tests are network dependent and can be a bit flaky, so if one fails, try running it again just to be sure.
+
+    Also, to generate a new endpoint (in case one gets deleted), run something akin to the following in a REPL:
+
+        socrata_glossarizer._get_portal_metadata("data.cityofnewyork.us", "auth/nyc-open-data.json", "links")
+
+    And then pick and save one of the list items to a file.
     """
+    def setUp(self):
+        self.table_glossary_keys = {'available_formats', 'resource', 'page_views', 'sources', 'created', 'description',
+                                    'protocol', 'last_updated', 'dataset', 'column_names', 'rows', 'topics_provided',
+                                    'preferred_mimetype','name', 'preferred_format', 'columns', 'flags',
+                                    'keywords_provided', 'landing_page'}
+        self.nontable_glossary_keys = {'resource', 'column_names', 'created', 'page_views', 'landing_page', 'flags',
+                                       'keywords_provided', 'name', 'description', 'last_updated', 'filesize',
+                                       'dataset','preferred_format', 'protocol', 'sources', 'preferred_mimetype',
+                                       'topics_provided'}
+
+    def test_glossarize_table(self):
+        with open("data/example_metadata-f4rp-2kvy.json", "r") as fp:
+            resource = socrata_glossarizer._resourcify(json.load(fp), "data.cityofnewyork.us", "table")
+
+        glossarized_resource = socrata_glossarizer._glossarize_table(resource, "opendata.cityofnewyork.us")
+        assert glossarized_resource[0].keys() == self.table_glossary_keys
 
     def test_glossarize_nontable_blob(self):
-        # TODO: Why does this fail?
-        # with open("data/example_metadata-q68s-8qxv.json", "r") as fp:
-        #     import pdb; pdb.set_trace()
-        #     resource = socrata_glossarizer.resourcify(json.load(fp), "data.cityofnewyork.us", "blob")
-        with open("data/example_resource-q68s-8qxv.json", "r") as fp:
-            resource = json.load(fp)
+        with open("data/example_metadata-q68s-8qxv.json", "r") as fp:
+            resource = socrata_glossarizer._resourcify(json.load(fp), "data.cityofnewyork.us", "blob")
 
         glossarized_resource = socrata_glossarizer._glossarize_nontable(resource, 20)
-        assert glossarized_resource[0].keys() == nontable_glossary_keys
+        assert glossarized_resource[0].keys() == self.nontable_glossary_keys
 
     def test_glossarize_nontable_geospatial_dataset(self):
         with open("data/example_metadata-ghq4-ydq4.json", "r") as fp:
             resource = socrata_glossarizer._resourcify(json.load(fp), "data.cityofnewyork.us", "geospatial dataset")
 
         glossarized_resource = socrata_glossarizer._glossarize_nontable(resource, 20)
-        assert glossarized_resource[0].keys() == nontable_glossary_keys
+        assert glossarized_resource[0].keys() == self.nontable_glossary_keys
 
-    def test_glossarize_external_link(self):
-        # For generating a new metadata entry for testing:
-        # links = socrata_glossarizer._get_portal_metadata("data.cityofnewyork.us",
-        #                                                 "auth/nyc-open-data.json",
-        #                                                 "links")
+    def test_glossarize_landing_page_external_link(self):
+        """
+        External links pointing to landing pages should be ignored by the glossarizer.
+        """
         with open("data/example_metadata-mmu8-8w8b.json", "r") as fp:
             resource = socrata_glossarizer._resourcify(json.load(fp), "data.cityofnewyork.us", "link")
 
         glossarized_resource = socrata_glossarizer._glossarize_nontable(resource, 20)
         assert len(glossarized_resource) == 0
 
+    def test_glossarize_data_landing_page(self):
+        """
+        External links pointing to landing pages with data on them should be pulled in however.
+        """
+        with open("data/example_metadata-p94q-8hxh.json", "r") as fp:
+            resource = socrata_glossarizer._resourcify(json.load(fp), "data.cityofnewyork.us", "link")
 
-# TODO: refactor ckan_glossarizer.py.
-# TODO: write the tests for ckan_glossarizer.py.
-# TODO: rewrite all of the docstrings.
-# TODO: write a using-this-api guide.
-# TODO: write a developing-with-this-api guide.
+        glossarized_resource = socrata_glossarizer._glossarize_nontable(resource, 20)
+        assert glossarized_resource[0].keys() == self.nontable_glossary_keys

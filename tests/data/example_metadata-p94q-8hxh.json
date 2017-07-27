@@ -1,0 +1,62 @@
+{
+  "resource" :
+    {
+      "nbe_fxf" : null,
+      "description" : "Data to solve Citi Bike's BigIdea.",
+      "type" : "href",
+      "obe_fxf" : null,
+      "download_count" : 584,
+      "parent_fxf" : null,
+      "createdAt" : "2014-05-06T15:30:10.000Z",
+      "provenance" : "official",
+      "page_views" :
+        {
+          "page_views_total" : 2311,
+          "page_views_total_log" : 11.17492568250068,
+          "page_views_last_week_log" : 4.906890595608519,
+          "page_views_last_week" : 29,
+          "page_views_last_month_log" : 6.614709844115209,
+          "page_views_last_month" : 97
+        },
+      "columns_description" : [],
+      "name" : "Citi Bike Live Station Feed (JSON)",
+      "attribution" : "CitiBike",
+      "columns_name" : [],
+      "columns_field_name" : [],
+      "id" : "p94q-8hxh",
+      "view_count" :
+        {
+          "page_views_total" : 2311,
+          "page_views_total_log" : 11.17492568250068,
+          "page_views_last_week_log" : 4.906890595608519,
+          "page_views_last_week" : 29,
+          "page_views_last_month_log" : 6.614709844115209,
+          "page_views_last_month" : 97
+        },
+      "updatedAt" : "2014-09-05T17:02:43.000Z"
+    },
+  "classification" :
+    {
+      "categories" : [],
+      "tags" : [],
+      "domain_category" : "NYC BigApps",
+      "domain_tags" :
+        [
+          "citibike",
+          "big apps",
+          "citi bike",
+          "city government",
+          "transportation",
+          "bigapps"
+        ],
+      "domain_metadata" :
+        [
+          { "value" : "As needed", "key" : "Update_Update-Frequency" },
+          { "value" : "CitiBike", "key" : "Dataset-Information_Agency" }
+        ]
+    },
+  "metadata" : { "domain" : "data.cityofnewyork.us" },
+  "permalink" : "https://data.cityofnewyork.us/d/p94q-8hxh",
+  "link" : "https://data.cityofnewyork.us/NYC-BigApps/Citi-Bike-Live-Station-Feed-JSON-/p94q-8hxh",
+  "owner" : { "id" : "5fuc-pqz2", "display_name" : "NYC OpenData" }
+}
