@@ -2,12 +2,14 @@
 Unit tests for socrata_glossarizer module macro-level subcomponents.
 """
 
-import unittest
-import pytest
 import json
+import sys;
+import unittest
 
-import sys; sys.path.insert(0, '../')
-from urban_physiology_toolkit import socrata_glossarizer
+import pytest
+
+sys.path.insert(0, '../')
+from urban_physiology_toolkit.glossarizers import socrata_glossarizer
 import requests
 
 

@@ -2,14 +2,16 @@
 This module implements methodologies for glossarizing Socrata endpoints.
 """
 
-import pysocrata
 import json
+
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
-from .glossarizer_utils import (_preexisting_cache, _load_glossary_todo,
-                                _write_resource_file, _write_glossary_file)
+import pysocrata
 from selenium.common.exceptions import TimeoutException
+from tqdm import tqdm
+
+from urban_physiology_toolkit.glossarizers.utils import (_preexisting_cache, _load_glossary_todo,
+                                                         _write_resource_file, _write_glossary_file)
 
 
 def _resourcify(metadata, domain, endpoint_type):
@@ -115,7 +117,7 @@ def write_resource_representation(domain="data.cityofnewyork.us", out="nyc-table
                                   credentials="../../../auth/nyc-open-data.json", endpoint_type='table'):
     """
     Fetches a resource representation for a single resource type from a Socrata portal. Simple I/O wrapper around
-    get_resource_representation, using some utilities from glossarizer_utils.py.
+    get_resource_representation, using some utilities from utils.py.
     """
     # If the file already exists and we specify `use_cache=True`, simply return.
     if _preexisting_cache(out, use_cache):
@@ -185,7 +187,7 @@ def _get_sizings(uri, timeout=60):
     """
     import datafy
     import sys
-    from .glossarizer_utils import _timeout_process
+    from .utils import _timeout_process
 
     @_timeout_process(timeout)
     def _size_up(uri):

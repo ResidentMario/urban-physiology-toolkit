@@ -27,7 +27,7 @@ class TestGeneratingDataPackagesFromGlossaryEntries(unittest.TestCase):
                             'contributors', 'name', 'filesize', 'licenses', 'sources', 'protocol', 'views',
                             'last_updated', 'keywords', 'description', 'dependencies', 'landing_page',
                             'topics_provided', 'page_views', 'resources', 'columns', 'available_formats', 'rows',
-                            'version', 'preferred_format', 'maintainers', 'publishers', 'complete'}
+                            'version', 'preferred_format', 'maintainers', 'publishers', 'complete', 'metadata'}
 
     def test_csv(self):
         """
