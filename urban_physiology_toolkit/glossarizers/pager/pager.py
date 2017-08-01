@@ -62,7 +62,7 @@ def page_socrata(domain, uri, condition=EC.presence_of_element_located((By.CLASS
     """
     # Choose a condition as close to the target elements of interest as possible. Failures may occur when a partial page
     # load occurs if that page load includes the conditioned element but not the targeted element. See further the
-    # note in socrata_glossarizer.py.
+    # note in socrata.py.
 
     # TODO: Implement this?
     # def is_alive(driver):
