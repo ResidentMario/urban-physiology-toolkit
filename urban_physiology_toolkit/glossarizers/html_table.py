@@ -7,7 +7,7 @@ import bs4
 import itertools
 from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load_glossary_todo,
                                                          write_resource_file, write_glossary_file,
-                                                         )
+                                                         generic_glossarize_resource)
 import urllib.parse
 
 from tqdm import tqdm
@@ -133,17 +133,15 @@ def get_qatari_ministry_of_planning_and_statistics_resource_list():
 
     rlinks = list(itertools.chain(*[_extract_links(url, "div.archive-content",
                                                    filter=filter_func) for url in tqdm(cat_links)]))
-    return [{'resource': r, 'domain': 'http://www.mdps.gov.qa/en/statistics1/Pages/default.aspx'} for r in rlinks]
+    return [{'domain': 'http://www.mdps.gov.qa/en/statistics1/Pages/default.aspx',
+            'resource': r,
+             'flags': []} for r in rlinks]
 
 
 def get_qatari_ministry_of_planning_and_statistics_glossary(resource_list, glossary, timeout=60):
     for resource in tqdm(resource_list):
-        # TODO: Write this.
-        # Need to chunk off a piece of the Socrata glossarizer code that will work here as well, which in turn
-        # requires writing more Socratat tests...
-        pass
-
-        # Update the resource list to make note of the fact that this job has been processed.
-        resource['flags'].append("processed")
+        modified_resource, glossarized_resource = generic_glossarize_resource(resource, timeout)
+        resource.update(modified_resource)
+        glossary += glossarized_resource
 
     return resource_list, glossary

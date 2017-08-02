@@ -31,12 +31,12 @@ class TestGetSizings(unittest.TestCase):
                                  "-707c785caa08?filename=Broadband%20Data%20Dig%20-%20Datasets.zip"
 
     def test_get_sizings_success_csv(self):
-        sizings = utils.get_sizings(self.csv_test_uri, timeout=20)
+        sizings = utils._get_sizings(self.csv_test_uri, timeout=20)
         assert sizings and len(sizings) != 0
 
     def test_get_sizings_success_zip(self):
         # More difficult problem than that of a single CSV file.
-        sizings = utils.get_sizings(self.zip_test_uri, timeout=20)
+        sizings = utils._get_sizings(self.zip_test_uri, timeout=20)
         assert sizings and len(sizings) != 0
 
     def test_get_sizing_fail(self):
@@ -45,4 +45,15 @@ class TestGetSizings(unittest.TestCase):
         the module depends on. See the notes in timeout_process for more details.
         """
         with pytest.raises(requests.exceptions.ChunkedEncodingError):
-            utils.get_sizings(self.zip_fail_test_uri, timeout=1)
+            utils._get_sizings(self.zip_fail_test_uri, timeout=1)
+
+
+class TestGenericGlossarizeResource(unittest.TestCase):
+    """
+    The brute-force way of generating a glossary entry or entries out of a reference list entry is to use
+    `generic_glossarize_resource`, which downloads the resource with a timeout and does the necessary munging to
+    beat it into shape. This section tests this method (itself a wrapper of `get_sizings`, tested above).
+    """
+    # TODO: Implement these tests.
+    # TODO: Make socrata._glossarize_nontable a wrapper over this method.
+    pass

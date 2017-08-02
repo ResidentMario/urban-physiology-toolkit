@@ -11,7 +11,7 @@ from selenium.common.exceptions import TimeoutException
 from tqdm import tqdm
 
 from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load_glossary_todo,
-                                                         write_resource_file, write_glossary_file, get_sizings)
+                                                         write_resource_file, write_glossary_file, _get_sizings)
 
 
 def _resourcify(metadata, domain, endpoint_type):
@@ -185,7 +185,7 @@ def _glossarize_nontable(resource, timeout):
     from requests.exceptions import ChunkedEncodingError
 
     try:
-        sizings = get_sizings(
+        sizings = _get_sizings(
             resource['resource'], timeout=timeout
         )
     except zipfile.BadZipfile:
