@@ -8,7 +8,7 @@ import shutil
 
 import sys; sys.path.insert(0, './../')
 # noinspection PyUnresolvedReferences
-from urban_physiology_toolkit.workflow_utils import (init_catalog, update_dag)
+from urban_physiology_toolkit.workflow import (init_catalog, update_dag)
 
 
 class TestSimpleResourceDAGSmokeTest(unittest.TestCase):

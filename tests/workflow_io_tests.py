@@ -11,8 +11,8 @@ import shutil
 
 import sys; sys.path.insert(0, './../')
 # noinspection PyUnresolvedReferences
-from urban_physiology_toolkit.workflow_utils import (init_catalog, generate_data_package_from_glossary_entry,
-                                                     finalize_catalog)
+from urban_physiology_toolkit.workflow import (init_catalog, generate_data_package_from_glossary_entry,
+                                               finalize_catalog)
 
 
 class TestGeneratingDataPackagesFromGlossaryEntries(unittest.TestCase):
