@@ -8,6 +8,8 @@ import unittest
 
 import pytest
 
+import urban_physiology_toolkit.glossarizers.utils
+
 sys.path.insert(0, '../')
 from urban_physiology_toolkit.glossarizers import socrata
 import requests
@@ -62,12 +64,12 @@ class TestGetSizings(unittest.TestCase):
                                  "-707c785caa08?filename=Broadband%20Data%20Dig%20-%20Datasets.zip"
 
     def test_get_sizings_success_csv(self):
-        sizings = socrata._get_sizings(self.csv_test_uri, timeout=20)
+        sizings = urban_physiology_toolkit.glossarizers.utils._get_sizings(self.csv_test_uri, timeout=20)
         assert sizings and len(sizings) != 0
 
     def test_get_sizings_success_zip(self):
         # More difficult problem than that of a single CSV file.
-        sizings = socrata._get_sizings(self.zip_test_uri, timeout=20)
+        sizings = urban_physiology_toolkit.glossarizers.utils._get_sizings(self.zip_test_uri, timeout=20)
         assert sizings and len(sizings) != 0
 
     def test_get_sizing_fail(self):
@@ -76,7 +78,7 @@ class TestGetSizings(unittest.TestCase):
         the module depends on. See the notes in timeout_process for more details.
         """
         with pytest.raises(requests.exceptions.ChunkedEncodingError):
-            socrata._get_sizings(self.zip_fail_test_uri, timeout=1)
+            urban_physiology_toolkit.glossarizers.utils._get_sizings(self.zip_fail_test_uri, timeout=1)
 
 
 class TestGlossarize(unittest.TestCase):

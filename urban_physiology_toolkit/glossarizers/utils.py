@@ -50,7 +50,7 @@ def load_glossary_todo(resource_filename, glossary_filename, use_cache=True):
     return resource_list, glossary
 
 
-def _timeout_process(seconds=10, error_message=os.strerror(errno.ETIME)):
+def timeout_process(seconds=10, error_message=os.strerror(errno.ETIME)):
     """
     Times out a process. Taken from Stack Overflow: 2281850/timeout-function-if-it-takes-too-long-to-finish.
 
@@ -99,3 +99,31 @@ def _timeout_process(seconds=10, error_message=os.strerror(errno.ETIME)):
         return wraps(func)(wrapper)
 
     return decorator
+
+
+def _get_sizings(uri, timeout=60):
+    """
+    Given a URI and a multiprocessing.Queue, returns a structured dict explaining file size and type if download is
+    successful, and None if the download process times out (takes too long).
+
+    This method utilizes limited_process and datafy facilities, these are two small modules written for the purposes of
+    this project maintained as separate modules.
+    """
+    import datafy
+    import sys
+    from .utils import timeout_process
+
+    @timeout_process(timeout)
+    def _size_up(uri):
+        resource = datafy.get(uri)
+        thing_log = []
+        for thing in resource:
+            thing_log.append({
+                'filesize': sys.getsizeof(thing['data'].content) / 1024,
+                'dataset': thing['filepath'],
+                'mimetype': thing['mimetype'],
+                'extension': thing['extension']
+            })
+        return thing_log
+
+    return _size_up(uri)

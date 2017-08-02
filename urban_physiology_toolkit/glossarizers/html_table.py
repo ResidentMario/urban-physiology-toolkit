@@ -7,6 +7,9 @@ import bs4
 import itertools
 from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load_glossary_todo,
                                                          write_resource_file, write_glossary_file)
+import urllib.parse
+
+from tqdm import tqdm
 
 
 ####################
@@ -33,9 +36,25 @@ def _extract_links(url, selector, filter=None):
     soup = bs4.BeautifulSoup(requests.get(url).content, 'html.parser')
     matches = soup.select(selector)
     hrefs = itertools.chain(*[match.find_all("a") for match in matches])
-    links = [a['href'] for a in hrefs]
+    links = [a['href'] for a in hrefs if 'href' in a.attrs]
 
-    return [link for link in links if filter(link)] if filter else links
+    # Make relative link paths absolute.
+    def reroot_link(link):
+        """Patches relative links over into absolute ones."""
+        parsed_link = urllib.parse.urlparse(link)
+
+        if parsed_link.scheme == "":
+            return urllib.parse.urljoin(url, link)
+        else:
+            return link
+
+    links = [reroot_link(link) for link in links]
+
+    # Filter links.
+    links = [link for link in links if filter(link)] if filter else links
+
+    # Remove duplicate links and return.
+    return list(set(links))
 
 
 #######################
@@ -61,35 +80,64 @@ def get_resource_list(domain=None):
         raise NotImplementedError("Glossarization has not yet been implemented for the {0} domain.".format(domain))
 
 
-def write_resource_list(domain=None, out=None, use_cache=True):
+def write_resource_list(domain=None, filename=None, use_cache=True):
     """
     TODO: This docstring.
     """
-    if preexisting_cache(out, use_cache):
+    if preexisting_cache(filename, use_cache):
         return
     else:
-        write_resource_file(get_resource_list(domain=domain), out)
+        write_resource_file(get_resource_list(domain=domain), filename)
 
 
-def get_glossary(domain, resource_list, timeout=60):
-    pass
+def get_glossary(domain, resource_list=None, glossary=None, timeout=60):
+    """
+    TODO: This docstring.
+    """
+    if domain == "http://www.mdps.gov.qa/en/statistics1/Pages/default.aspx":
+        resource_list_cum_glossary = get_qatari_ministry_of_planning_and_statistics_resource_list()
+        for entry in resource_list_cum_glossary:
+            entry['dataset'] = "."
+        return resource_list_cum_glossary
+
+    # All other HTML grabbers have not been implemented yet.
+    elif domain is None:
+        raise ValueError("No domain was provided.")
+    else:
+        raise NotImplementedError("Glossarization has not yet been implemented for the {0} domain.".format(domain))
 
 
-# def write_glossary(domain=None, resource_filename=None, glossary_filename=None, timeout=60, use_cache=True):
-#     resource_list, glossary = _load_glossary_todo(resource_filename, glossary_filename, use_cache)
-#
-#     try:
-#         resource_list, glossary = get_glossary(resource_list, glossary, domain=domain, endpoint_type=endpoint_type,
-#                                                timeout=timeout)
-#
-#     # Save output.
-#     finally:
-#         _write_resource_file(resource_list, resource_filename)
-#         _write_glossary_file(glossary, glossary_filename)
+def write_glossary(domain=None, resource_filename=None, glossary_filename=None, timeout=60, use_cache=True):
+    resource_list, glossary = load_glossary_todo(resource_filename, glossary_filename, use_cache)
+
+    try:
+        resource_list, glossary = get_glossary(domain, resource_list, glossary, timeout=timeout)
+
+    # Save output.
+    finally:
+        write_resource_file(resource_list, resource_filename)
+        write_glossary_file(glossary, glossary_filename)
+
 
 #####################
 # INTERNAL ROUTINES #
 #####################
 
 def get_qatari_ministry_of_planning_and_statistics_resource_list():
-    pass
+    homepage = "http://www.mdps.gov.qa/en/statistics1/Pages/default.aspx"
+    cat_links = _extract_links(homepage, "div.population-census")
+
+    def filter_func(l):
+        pdf_or_xls = l.split(".")[-1] in ['pdf', 'xls']
+        non_social = ('facebook' not in l and 'google' not in l and 'linkedin' not in l and 'twitter' not in l)
+        return pdf_or_xls and non_social
+
+    # TODO: [:1] is temp for testing purposes.
+    rlinks = list(itertools.chain(*[_extract_links(url, "div.archive-content",
+                                                   filter=filter_func) for url in tqdm(cat_links)]))
+    return [{'resource': r, 'domain': 'http://www.mdps.gov.qa/en/statistics1/Pages/default.aspx'} for r in rlinks]
+
+
+def get_qatari_ministry_of_planning_and_statistics_glossary(resource_list, glossary, timeout=60):
+    # timeout_process
+    return 2

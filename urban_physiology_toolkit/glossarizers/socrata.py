@@ -11,7 +11,7 @@ from selenium.common.exceptions import TimeoutException
 from tqdm import tqdm
 
 from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load_glossary_todo,
-                                                         write_resource_file, write_glossary_file)
+                                                         write_resource_file, write_glossary_file, _get_sizings)
 
 
 def _resourcify(metadata, domain, endpoint_type):
@@ -113,20 +113,20 @@ def get_resource_list(domain, credentials, endpoint_type):
     return roi_repr
 
 
-def write_resource_list(domain="data.cityofnewyork.us", out="nyc-tables.json", use_cache=True,
+def write_resource_list(domain="data.cityofnewyork.us", filename="nyc-tables.json", use_cache=True,
                         credentials="../../../auth/nyc-open-data.json", endpoint_type='table'):
     """
     Fetches a resource representation for a single resource type from a Socrata portal. Simple I/O wrapper around
     get_resource_representation, using some utilities from utils.py.
     """
     # If the file already exists and we specify `use_cache=True`, simply return.
-    if preexisting_cache(out, use_cache):
+    if preexisting_cache(filename, use_cache):
         return
 
     # Generate to file and exit.
     roi_repr = []
     roi_repr += get_resource_list(domain, credentials, endpoint_type)
-    write_resource_file(roi_repr, out)
+    write_resource_file(roi_repr, filename)
 
 
 def _glossarize_table(resource, domain, driver=None, timeout=60):
@@ -175,34 +175,6 @@ def _glossarize_table(resource, domain, driver=None, timeout=60):
         driver.quit()
 
     return [glossarized_resource]
-
-
-def _get_sizings(uri, timeout=60):
-    """
-    Given a URI and a multiprocessing.Queue, returns a structured dict explaining file size and type if download is
-    successful, and None if the download process times out (takes too long).
-
-    This method utilizes limited_process and datafy facilities, these are two small modules written for the purposes of
-    this project maintained as separate modules.
-    """
-    import datafy
-    import sys
-    from .utils import _timeout_process
-
-    @_timeout_process(timeout)
-    def _size_up(uri):
-        resource = datafy.get(uri)
-        thing_log = []
-        for thing in resource:
-            thing_log.append({
-                'filesize': sys.getsizeof(thing['data'].content) / 1024,
-                'dataset': thing['filepath'],
-                'mimetype': thing['mimetype'],
-                'extension': thing['extension']
-            })
-        return thing_log
-
-    return _size_up(uri)
 
 
 def _glossarize_nontable(resource, timeout):

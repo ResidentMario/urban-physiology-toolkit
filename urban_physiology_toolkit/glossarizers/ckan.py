@@ -8,12 +8,12 @@ import requests
 from tqdm import tqdm
 
 from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load_glossary_todo,
-                                                         write_resource_file, write_glossary_file, _timeout_process)
+                                                         write_resource_file, write_glossary_file, timeout_process)
 
 
-def write_resource_list(domain="data.gov.sg", out=None, use_cache=True, protocol='https'):
+def write_resource_list(domain="data.gov.sg", filename=None, use_cache=True, protocol='https'):
     # If the file already exists and we specify `use_cache=True`, simply return.
-    if preexisting_cache(out, use_cache):
+    if preexisting_cache(filename, use_cache):
         return
 
     package_list_slug = "{0}://{1}/api/3/action/package_list".format(protocol, domain)
@@ -160,14 +160,14 @@ def write_resource_list(domain="data.gov.sg", out=None, use_cache=True, protocol
                 })
     finally:
         # Write to file and exit.
-        write_resource_file(roi_repr, out)
+        write_resource_file(roi_repr, filename)
 
 
 def write_glossary(domain="data.gov.sg", resource_filename=None, glossary_filename=None,
                    use_cache=True, timeout=60):
     resource_list, glossary = load_glossary_todo(resource_filename, glossary_filename, use_cache=use_cache)
 
-    @_timeout_process(timeout)
+    @timeout_process(timeout)
     def _size_up(uri):
         import sys
         import datafy
