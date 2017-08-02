@@ -1,5 +1,8 @@
-import warnings
+"""
+CKAN glossarizer.
+"""
 
+import warnings
 import pandas as pd
 import requests
 from tqdm import tqdm

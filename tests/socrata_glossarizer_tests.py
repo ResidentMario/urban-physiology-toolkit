@@ -1,5 +1,5 @@
 """
-Unit tests for socrata_glossarizer module macro-level subcomponents.
+Unit tests for the Socrata glossarizer.
 """
 
 import json

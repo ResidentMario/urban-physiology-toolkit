@@ -1,5 +1,5 @@
 """
-This module implements methodologies for glossarizing Socrata endpoints.
+Socrata glossarizer.
 """
 
 import json
