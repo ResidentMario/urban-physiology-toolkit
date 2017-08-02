@@ -1,5 +1,5 @@
 """
-Generic methods, mostly file IO, which is common across all glossarizers.
+Generic methods common across all or many glossarizers.
 """
 
 import os
@@ -101,17 +101,21 @@ def timeout_process(seconds=10, error_message=os.strerror(errno.ETIME)):
     return decorator
 
 
-def _get_sizings(uri, timeout=60):
+def get_sizings(uri, timeout=60):
     """
-    Given a URI and a multiprocessing.Queue, returns a structured dict explaining file size and type if download is
-    successful, and None if the download process times out (takes too long).
+    Given a URI, attempts to download it within `timeout` seconds. This method throws a
+    `requests.exceptions.ChunkedEncodingError` if it does not succeed before the timeout is reached. It does no
+    error handling on its own, so if the download fails due to some other reason it will raise. Otherwise,
+    if the download succeeds (the entire file is downloaded within `timeout` seconds), returns a structured list of
+    dicts of size and type-related metadata on the downloaded file. This data comes in the form of a list because if
+    the file is an archival file (a ZIP file), the file will be unpacked locally and its contents will be
+    inspected and recorded. On the other hand, if the file being downloaded is singular, the list will only have one
+    element.
 
-    This method utilizes limited_process and datafy facilities, these are two small modules written for the purposes of
-    this project maintained as separate modules.
+    This method uses `timeout_process`, above, and adapts the separately packaged `datafy` module to do processing.
     """
     import datafy
     import sys
-    from .utils import timeout_process
 
     @timeout_process(timeout)
     def _size_up(uri):
