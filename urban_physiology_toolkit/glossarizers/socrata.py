@@ -180,7 +180,12 @@ def _glossarize_table(resource, domain, driver=None, timeout=60):
 def _glossarize_nontable(resource, timeout):
     """
     Same as `glossarize_table`, but for the non-table resource types.
+
+    This method predates the generic `utils.generic_glossarize_resource` method, which does about the same thing but
+    is portable and more conformant.
     """
+    # TODO: Replace this with a utils.generic_glossarize_resource wrapper.
+
     import zipfile
     from requests.exceptions import ChunkedEncodingError
 
@@ -224,9 +229,6 @@ def _glossarize_nontable(resource, timeout):
             # front-end, and python-magic should in *most* cases determine this fact for us and return it
             # in the file typing information. So we can use this to hopefully eliminate many of the
             # problematic endpoints.
-
-            # However, realistically there would need to be some kind of secondary list mechanism that's
-            # maintained by hand for excluding specific pages. That, however, is a TODO.
             if sizing['extension'] != "htm" and sizing['extension'] != "html":
                 # Remove the "processed" flag from the resource going into the glossaries, if one exists.
                 glossarized_resource_element = resource.copy()

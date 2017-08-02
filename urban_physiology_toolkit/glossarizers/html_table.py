@@ -72,7 +72,7 @@ def get_resource_list(domain=None):
     -------
     Returns the resource list for the given input.
     """
-    # TODO: Safe failover with https://github.com/rholder/retrying
+    # TODO: Harden against network failures using https://github.com/rholder/retrying
     if domain == "http://www.mdps.gov.qa/en/statistics1/Pages/default.aspx":
         return get_qatari_ministry_of_planning_and_statistics_resource_list()
     # All other HTML grabbers have not been implemented yet.
@@ -84,7 +84,7 @@ def get_resource_list(domain=None):
 
 def write_resource_list(domain=None, filename=None, use_cache=True):
     """
-    TODO: This docstring.
+    Writes the resource list for the given domain.
     """
     if preexisting_cache(filename, use_cache):
         return
@@ -94,8 +94,11 @@ def write_resource_list(domain=None, filename=None, use_cache=True):
 
 def get_glossary(domain, resource_list=None, glossary=None, timeout=60):
     """
-    TODO: This docstring.
+    Gets the glossary for the given domain.
     """
+    resource_list = [] if resource_list is None else resource_list
+    glossary = [] if glossary is None else glossary
+
     if domain == "http://www.mdps.gov.qa/en/statistics1/Pages/default.aspx":
         return get_qatari_ministry_of_planning_and_statistics_glossary(resource_list, glossary, timeout=timeout)
 
@@ -107,6 +110,9 @@ def get_glossary(domain, resource_list=None, glossary=None, timeout=60):
 
 
 def write_glossary(domain=None, resource_filename=None, glossary_filename=None, timeout=60, use_cache=True):
+    """
+    Writes the glossary file for the given domain.
+    """
     resource_list, glossary = load_glossary_todo(resource_filename, glossary_filename, use_cache)
 
     try:
@@ -123,6 +129,9 @@ def write_glossary(domain=None, resource_filename=None, glossary_filename=None, 
 #####################
 
 def get_qatari_ministry_of_planning_and_statistics_resource_list():
+    """
+    Generates a resource list for the Qatar Ministry of Planning and Statistics open datasets.
+    """
     homepage = "http://www.mdps.gov.qa/en/statistics1/Pages/default.aspx"
     cat_links = _extract_links(homepage, "div.population-census")
 
@@ -139,6 +148,9 @@ def get_qatari_ministry_of_planning_and_statistics_resource_list():
 
 
 def get_qatari_ministry_of_planning_and_statistics_glossary(resource_list, glossary, timeout=60):
+    """
+    Generates a glossary for the Qatar Ministry of Planning and Statistics open datasets.
+    """
     for resource in tqdm(resource_list):
         modified_resource, glossarized_resource = generic_glossarize_resource(resource, timeout)
         resource.update(modified_resource)
