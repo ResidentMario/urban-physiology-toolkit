@@ -71,6 +71,7 @@ def get_resource_list(domain=None):
     -------
     Returns the resource list for the given input.
     """
+    # TODO: Safe failover with https://github.com/rholder/retrying
     if domain == "http://www.mdps.gov.qa/en/statistics1/Pages/default.aspx":
         return get_qatari_ministry_of_planning_and_statistics_resource_list()
     # All other HTML grabbers have not been implemented yet.
@@ -95,10 +96,7 @@ def get_glossary(domain, resource_list=None, glossary=None, timeout=60):
     TODO: This docstring.
     """
     if domain == "http://www.mdps.gov.qa/en/statistics1/Pages/default.aspx":
-        resource_list_cum_glossary = get_qatari_ministry_of_planning_and_statistics_resource_list()
-        for entry in resource_list_cum_glossary:
-            entry['dataset'] = "."
-        return resource_list_cum_glossary
+        return get_qatari_ministry_of_planning_and_statistics_glossary(resource_list, glossary, timeout=timeout)
 
     # All other HTML grabbers have not been implemented yet.
     elif domain is None:
@@ -139,5 +137,7 @@ def get_qatari_ministry_of_planning_and_statistics_resource_list():
 
 
 def get_qatari_ministry_of_planning_and_statistics_glossary(resource_list, glossary, timeout=60):
-    # timeout_process
-    return 2
+    resource_list_cum_glossary = get_qatari_ministry_of_planning_and_statistics_resource_list()
+    for entry in resource_list_cum_glossary:
+        entry['dataset'] = "."
+    return resource_list_cum_glossary

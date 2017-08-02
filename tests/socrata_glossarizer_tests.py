@@ -3,14 +3,13 @@ Unit tests for the Socrata glossarizer.
 """
 
 import json
-import sys;
+import sys; sys.path.append('../')
 import unittest
 
 import pytest
 
 import urban_physiology_toolkit.glossarizers.utils
 
-sys.path.insert(0, '../')
 from urban_physiology_toolkit.glossarizers import socrata
 import requests
 
