@@ -7,13 +7,13 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 
-from urban_physiology_toolkit.glossarizers.utils import (_preexisting_cache, _load_glossary_todo,
-                                                         _write_resource_file, _write_glossary_file, _timeout_process)
+from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load_glossary_todo,
+                                                         write_resource_file, write_glossary_file, _timeout_process)
 
 
 def write_resource_list(domain="data.gov.sg", out=None, use_cache=True, protocol='https'):
     # If the file already exists and we specify `use_cache=True`, simply return.
-    if _preexisting_cache(out, use_cache):
+    if preexisting_cache(out, use_cache):
         return
 
     package_list_slug = "{0}://{1}/api/3/action/package_list".format(protocol, domain)
@@ -160,12 +160,12 @@ def write_resource_list(domain="data.gov.sg", out=None, use_cache=True, protocol
                 })
     finally:
         # Write to file and exit.
-        _write_resource_file(roi_repr, out)
+        write_resource_file(roi_repr, out)
 
 
 def write_glossary(domain="data.gov.sg", resource_filename=None, glossary_filename=None,
                    use_cache=True, timeout=60):
-    resource_list, glossary = _load_glossary_todo(resource_filename, glossary_filename, use_cache=use_cache)
+    resource_list, glossary = load_glossary_todo(resource_filename, glossary_filename, use_cache=use_cache)
 
     @_timeout_process(timeout)
     def _size_up(uri):
@@ -234,6 +234,6 @@ def write_glossary(domain="data.gov.sg", resource_filename=None, glossary_filena
     # Whether we succeeded or got caught on a fatal error, in either case clean up.
     finally:
         # Save output.
-        _write_resource_file(resource_list, resource_filename)
-        _write_glossary_file(glossary, glossary_filename)
+        write_resource_file(resource_list, resource_filename)
+        write_glossary_file(glossary, glossary_filename)
 

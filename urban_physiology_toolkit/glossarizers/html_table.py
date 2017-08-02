@@ -5,8 +5,8 @@ Glossarizer tools for domains hosting data using (simple ones for now, meaning, 
 import requests
 import bs4
 import itertools
-from urban_physiology_toolkit.glossarizers.utils import (_preexisting_cache, _load_glossary_todo,
-                                                         _write_resource_file, _write_glossary_file)
+from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load_glossary_todo,
+                                                         write_resource_file, write_glossary_file)
 
 
 ####################
@@ -65,10 +65,10 @@ def write_resource_list(domain=None, out=None, use_cache=True):
     """
     TODO: This docstring.
     """
-    if _preexisting_cache(out, use_cache):
+    if preexisting_cache(out, use_cache):
         return
     else:
-        _write_resource_file(get_resource_list(domain=domain), out)
+        write_resource_file(get_resource_list(domain=domain), out)
 
 
 def get_glossary(domain, resource_list, timeout=60):

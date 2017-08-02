@@ -7,24 +7,24 @@ import json
 import errno
 
 
-def _preexisting_cache(folder_filepath, use_cache):
+def preexisting_cache(folder_filepath, use_cache):
     # If the file already exists and we specify `use_cache=True`, simply return.
     preexisting = os.path.isfile(folder_filepath)
     if preexisting and use_cache:
         return
 
 
-def _write_resource_file(roi_repr, resource_filename):
+def write_resource_file(roi_repr, resource_filename):
     with open(resource_filename, 'w') as fp:
         json.dump(roi_repr, fp, indent=4)
 
 
-def _write_glossary_file(glossary_repr, glossary_filename):
+def write_glossary_file(glossary_repr, glossary_filename):
     with open(glossary_filename, "w") as fp:
         json.dump(glossary_repr, fp, indent=4)
 
 
-def _load_glossary_todo(resource_filename, glossary_filename, use_cache=True):
+def load_glossary_todo(resource_filename, glossary_filename, use_cache=True):
     # Begin by loading in the data that we have.
     with open(resource_filename, "r") as fp:
         resource_list = json.load(fp)

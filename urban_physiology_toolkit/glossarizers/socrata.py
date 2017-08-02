@@ -10,8 +10,8 @@ import pysocrata
 from selenium.common.exceptions import TimeoutException
 from tqdm import tqdm
 
-from urban_physiology_toolkit.glossarizers.utils import (_preexisting_cache, _load_glossary_todo,
-                                                         _write_resource_file, _write_glossary_file)
+from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load_glossary_todo,
+                                                         write_resource_file, write_glossary_file)
 
 
 def _resourcify(metadata, domain, endpoint_type):
@@ -120,13 +120,13 @@ def write_resource_list(domain="data.cityofnewyork.us", out="nyc-tables.json", u
     get_resource_representation, using some utilities from utils.py.
     """
     # If the file already exists and we specify `use_cache=True`, simply return.
-    if _preexisting_cache(out, use_cache):
+    if preexisting_cache(out, use_cache):
         return
 
     # Generate to file and exit.
     roi_repr = []
     roi_repr += get_resource_list(domain, credentials, endpoint_type)
-    _write_resource_file(roi_repr, out)
+    write_resource_file(roi_repr, out)
 
 
 def _glossarize_table(resource, domain, driver=None, timeout=60):
@@ -357,7 +357,7 @@ def write_glossary(domain='opendata.cityofnewyork.us', use_cache=True,
     """
 
     # Begin by loading in the data that we have.
-    resource_list, glossary = _load_glossary_todo(resource_filename, glossary_filename, use_cache)
+    resource_list, glossary = load_glossary_todo(resource_filename, glossary_filename, use_cache)
 
     # Generate the glossaries.
     try:
@@ -366,5 +366,5 @@ def write_glossary(domain='opendata.cityofnewyork.us', use_cache=True,
 
     # Save output.
     finally:
-        _write_resource_file(resource_list, resource_filename)
-        _write_glossary_file(glossary, glossary_filename)
+        write_resource_file(resource_list, resource_filename)
+        write_glossary_file(glossary, glossary_filename)
