@@ -8,7 +8,7 @@ from urban_physiology_toolkit.glossarizers.utils import (_preexisting_cache, _lo
                                                          _write_resource_file, _write_glossary_file, _timeout_process)
 
 
-def write_resource_representation(domain="data.gov.sg", out=None, use_cache=True, protocol='https'):
+def write_resource_list(domain="data.gov.sg", out=None, use_cache=True, protocol='https'):
     # If the file already exists and we specify `use_cache=True`, simply return.
     if _preexisting_cache(out, use_cache):
         return
@@ -25,7 +25,6 @@ def write_resource_representation(domain="data.gov.sg", out=None, use_cache=True
 
     try:
         for resource in tqdm(resources):
-            # import pdb; pdb.set_trace()
             # package_metadata_show vs. package_show?
             metadata = requests.get("{0}://{1}/api/3/action/package_show?id={2}".format(protocol,
                                                                                         domain,
@@ -163,9 +162,6 @@ def write_resource_representation(domain="data.gov.sg", out=None, use_cache=True
 
 def write_glossary(domain="data.gov.sg", resource_filename=None, glossary_filename=None,
                    use_cache=True, timeout=60):
-    # import limited_process
-    # q = limited_process.q()
-
     resource_list, glossary = _load_glossary_todo(resource_filename, glossary_filename, use_cache=use_cache)
 
     @_timeout_process(timeout)

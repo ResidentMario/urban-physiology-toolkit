@@ -98,7 +98,7 @@ def _get_portal_metadata(domain, credentials, endpoint_type):
     return roi
 
 
-def get_resource_representation(domain, credentials, endpoint_type):
+def get_resource_list(domain, credentials, endpoint_type):
     """
     Given a domain, Socrata API credentials for that domain, and a type of endpoint of interest, returns a full
     resource representation (using resourcify) for each resource therein.
@@ -113,8 +113,8 @@ def get_resource_representation(domain, credentials, endpoint_type):
     return roi_repr
 
 
-def write_resource_representation(domain="data.cityofnewyork.us", out="nyc-tables.json", use_cache=True,
-                                  credentials="../../../auth/nyc-open-data.json", endpoint_type='table'):
+def write_resource_list(domain="data.cityofnewyork.us", out="nyc-tables.json", use_cache=True,
+                        credentials="../../../auth/nyc-open-data.json", endpoint_type='table'):
     """
     Fetches a resource representation for a single resource type from a Socrata portal. Simple I/O wrapper around
     get_resource_representation, using some utilities from utils.py.
@@ -125,7 +125,7 @@ def write_resource_representation(domain="data.cityofnewyork.us", out="nyc-table
 
     # Generate to file and exit.
     roi_repr = []
-    roi_repr += get_resource_representation(domain, credentials, endpoint_type)
+    roi_repr += get_resource_list(domain, credentials, endpoint_type)
     _write_resource_file(roi_repr, out)
 
 
