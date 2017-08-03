@@ -1,2 +1,2 @@
-tests/data/*
-tests/fixtures/*
+tests/data/* linguist-vendored
+tests/fixtures/* linguist-vendored
