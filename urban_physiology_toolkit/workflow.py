@@ -41,7 +41,7 @@ def generate_data_package_from_glossary_entry(entry):
         'keywords': entry['keywords_provided'],
         'description': entry['description'],
         'licenses': [],
-        'sources': [{'name': source, 'web': None} for source in entry['sources']],
+        'sources': [{'title': source} for source in entry['sources']],
         'contributors': [],
         'maintainers': [],
         'publishers': [],
