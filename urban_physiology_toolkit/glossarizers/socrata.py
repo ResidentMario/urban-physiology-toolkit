@@ -4,7 +4,7 @@ Socrata glossarizer.
 
 import json
 
-import numpy as np
+# import numpy as np
 import pandas as pd
 import pysocrata
 from selenium.common.exceptions import TimeoutException
@@ -14,14 +14,20 @@ from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load
                                                          write_resource_file, write_glossary_file, _get_sizings)
 
 
-def _resourcify(metadata, domain, endpoint_type):
+def _resourcify(metadata, domain):
     """
     Given Socrata API metadata about a certain endpoint (as well as the domain of the endpoint
     e.g. "data.cityofnewyork.us", and the type, e.g. "table") return a resource-ified entry for the
     endpoint for inclusion in the resource listing.
     """
+    # Munge the Socrata API output a bit beforehand: in this case reworking the name references to match our
+    # volcabulary.
+    type = metadata['resource']['type']
+    volcab_map = {'dataset': 'table', 'href': 'link', 'map': 'geospatial dataset', 'file': 'blob'}
+    resource_type = volcab_map[type]
+
     # Conditional pager import (this inits PhantomJS, don't necessarily want to if we don't have to).
-    if endpoint_type == "blob" or endpoint_type == "link":
+    if resource_type == "blob" or resource_type == "link":
         from .pager import page_socrata_for_resource_link
 
     endpoint = metadata['resource']['id']
@@ -30,9 +36,9 @@ def _resourcify(metadata, domain, endpoint_type):
     landing_page = "https://{0}/d/{1}".format(domain, endpoint)
 
     # The slug format depends on the API signature, which is in turn dependent on the dataset type.
-    if endpoint_type == "table":
+    if resource_type == "table":
         slug = "https://" + domain + "/api/views/" + endpoint + "/rows.csv?accessType=DOWNLOAD"
-    elif endpoint_type == "geospatial dataset":
+    elif resource_type == "geospatial dataset":
         slug = "https://" + domain + "/api/geospatial/" + endpoint + "?method=export&format=GeoJSON"
     else:  # endpoint_type == "blob" or endpoint_type == "link":
         # noinspection PyUnboundLocalVariable
@@ -48,13 +54,19 @@ def _resourcify(metadata, domain, endpoint_type):
 
     column_names = metadata['resource']['columns_name']
 
-    topics_provided = [metadata['classification']['domain_category']]
+    # Endpoints which do not have any domain categories assigned to them do not report this field whatsoever in the
+    # API output. To verify this, try inspecting the fields of the data returned from a `pysocrata.get_datasets` run.
+    try:
+        topics_provided = [metadata['classification']['domain_category']]
+    except KeyError:
+        topics_provided = []
+
     keywords_provided = metadata['classification']['domain_tags']
 
     return {
         'landing_page': landing_page,
         'resource': slug,
-        'resource_type': endpoint_type,
+        'resource_type': resource_type,
         'protocol': 'https',
         'name': name,
         'description': description,
@@ -69,7 +81,7 @@ def _resourcify(metadata, domain, endpoint_type):
     }
 
 
-def _get_portal_metadata(domain, credentials, endpoint_type):
+def _get_portal_metadata(domain, credentials):
     """
     Given a domain, Socrata API credentials for that domain, and a type of endpoint of interest, returns the metadata
     provided by the portal (via the pysocrata package).
@@ -86,36 +98,31 @@ def _get_portal_metadata(domain, credentials, endpoint_type):
     # are not interested in.
     resources = [d for d in resources if d['resource']['type'] != 'story']
 
-    # Munge the Socrata API output a bit beforehand: in this case reworking the name references to match our
-    # volcabulary.
-    types = [d['resource']['type'] for d in resources]
-    volcab_map = {'dataset': 'table', 'href': 'link', 'map': 'geospatial dataset', 'file': 'blob'}
-    types = list(map(lambda d: volcab_map[d], types))
+    # We also exclude community-generated datasets. These are focus of our interest, and they interestingly cause
+    # technical hiccups when read in. For example, there is a community dataset in the NYC Open Data Portal with the
+    # id uacg-pexx that, when visited, just redirects back to the NYC Open Data homepage. Very strange.
+    resources = [r for r in resources if r['resource']['provenance'] != 'community']
 
-    # Get the resources of interest.
-    indices = np.nonzero([t == endpoint_type for t in types])
-    roi = np.array(resources)[indices]
-
-    return roi
+    return resources
 
 
-def get_resource_list(domain, credentials, endpoint_type):
+def get_resource_list(domain, credentials):
     """
     Given a domain, Socrata API credentials for that domain, and a type of endpoint of interest, returns a full
     resource representation (using resourcify) for each resource therein.
     """
-    roi = _get_portal_metadata(domain, credentials, endpoint_type)
+    resources_metadata = _get_portal_metadata(domain, credentials)
 
     # Convert the pysocrata output to our data representation using resourcify.
-    roi_repr = []
-    for metadata in tqdm(roi):
-        roi_repr.append(_resourcify(metadata, domain, endpoint_type))
+    resources = []
+    for metadata in tqdm(resources_metadata):
+        resources.append(_resourcify(metadata, domain))
 
-    return roi_repr
+    return resources
 
 
-def write_resource_list(domain="data.cityofnewyork.us", filename="nyc-tables.json", use_cache=True,
-                        credentials="../../../auth/nyc-open-data.json", endpoint_type='table'):
+def write_resource_list(domain="data.cityofnewyork.us", filename="resource-list.json", use_cache=True,
+                        credentials="../../../auth/nyc-open-data.json"):
     """
     Fetches a resource representation for a single resource type from a Socrata portal. Simple I/O wrapper around
     get_resource_representation, using some utilities from utils.py.
@@ -126,7 +133,7 @@ def write_resource_list(domain="data.cityofnewyork.us", filename="nyc-tables.jso
 
     # Generate to file and exit.
     roi_repr = []
-    roi_repr += get_resource_list(domain, credentials, endpoint_type)
+    roi_repr += get_resource_list(domain, credentials)
     write_resource_file(roi_repr, filename)
 
 
