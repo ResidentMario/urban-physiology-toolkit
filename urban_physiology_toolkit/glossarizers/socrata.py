@@ -54,6 +54,7 @@ def _resourcify(metadata, domain, endpoint_type):
     return {
         'landing_page': landing_page,
         'resource': slug,
+        'resource_type': endpoint_type,
         'protocol': 'https',
         'name': name,
         'description': description,
@@ -184,7 +185,7 @@ def _glossarize_nontable(resource, timeout):
     This method predates the generic `utils.generic_glossarize_resource` method, which does about the same thing but
     is portable and more conformant.
     """
-    # TODO: Replace this with a utils.generic_glossarize_resource wrapper.
+    # TODO: Refactor this convoluted method into a simpler `utils.generic_glossarize_resource` wrapper.
 
     import zipfile
     from requests.exceptions import ChunkedEncodingError
