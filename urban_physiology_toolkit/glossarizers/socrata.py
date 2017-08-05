@@ -151,6 +151,7 @@ def _glossarize_table(resource, domain, driver=None, timeout=60):
     if not driver_passed:
         from .pager import driver
 
+    # TODO: Raise actual warnings here (instead of emitting print statements).
     try:
         rowcol = page_socrata_for_endpoint_size(domain, resource['landing_page'], timeout=timeout)
     except DeletedEndpointException:
@@ -158,7 +159,7 @@ def _glossarize_table(resource, domain, driver=None, timeout=60):
         resource['flags'].append('removed')
         return []
     except TimeoutException:
-        print("WARNING: the '{0}' endpoint could not be processed.".format(resource['landing_page']))
+        print("WARNING: the '{0}' endpoint took too long to process.".format(resource['landing_page']))
         resource['flags'].append('removed')
         return []
 
@@ -203,14 +204,15 @@ def _glossarize_nontable(resource, timeout):
         )
     except zipfile.BadZipfile:
         # cf. https://github.com/ResidentMario/datafy/issues/2
-        print("WARNING: the '{0}' endpoint is either misformatted or contains multiple levels of "
-              "archiving which failed to process.".format(resource['landing_page']))
+        # print("WARNING: the '{0}' endpoint is either misformatted or contains multiple levels of "
+        #       "archiving which failed to process.".format(resource['landing_page']))
         resource['flags'].append('error')
         return []
     # This error is raised when the process takes too long.
     except ChunkedEncodingError:
-        print("WARNING: the '{0}' endpoint took longer than the {1} second timeout to process.".format(
-            resource['landing_page'], timeout))
+        # print("WARNING: the '{0}' endpoint took longer than the {1} second timeout to process.".format(
+        #     resource['landing_page'], timeout))
+        # TODO: Is this the right thing to do?
         return []
     except:
         # External links may point anywhere, including HTML pages which don't exist or which raise errors when you
@@ -274,49 +276,43 @@ def _glossarize_nontable(resource, timeout):
         return [glossarized_resource_element]
 
 
-def get_glossary(resource_list, glossary, domain='opendata.cityofnewyork.us', endpoint_type="table", timeout=60):
+def get_glossary(resource_list, glossary, domain='opendata.cityofnewyork.us', timeout=60):
     # Whether we succeed or fail, we'll want to save the data we have at the end with a try-finally block.
     try:
-        # What we do with the data depends on the endpoint type.
+        tables = [r for r in resource_list if r['resource_type'] == "table"]
+        nontables = [r for r in resource_list if r['resource_type'] != "table"]
 
         # tables:
-        # We take advantage of information provided on the Socrata portal pages to avoid having to work with the
-        # datasets directly. The facilities provided by the pager module are used to handle reading in data
-        # from the portal web interface, which displays, among other things, row and column counts.
-        if endpoint_type == "table":
-            # Only import pager if we have to.
+        # TODO: GitHub issue the driver thing.
+        from .pager import driver
 
-            from .pager import driver
+        for resource in tqdm(tables):
+            glossarized_resource = _glossarize_table(resource, domain, driver=driver)
+            glossary += glossarized_resource
 
-            for resource in tqdm(resource_list):
-                glossarized_resource = _glossarize_table(resource, domain, driver=driver)
-                glossary += glossarized_resource
-
-                # Update the resource list to make note of the fact that this job has been processed.
+            # Update the resource list to make note of the fact that this job has been processed.
+            if "processed" not in resource['flags']:
                 resource['flags'].append("processed")
 
         # geospatial datasets, blobs, links:
-        # ...
-        else:
-            for resource in tqdm(list(resource_list)):
-                glossarized_resource = _glossarize_nontable(resource, timeout)
-                glossary += glossarized_resource
+        for resource in tqdm(nontables):
+            glossarized_resource = _glossarize_nontable(resource, timeout)
+            glossary += glossarized_resource
 
-                # Update the resource list to make note of the fact that this job has been processed.
-                if 'processed' not in resource['flags']:
-                    resource["flags"].append("processed")
+            # Update the resource list to make note of the fact that this job has been processed.
+            if "processed" not in resource['flags']:
+                resource['flags'].append("processed")
 
     # Whether we succeeded or got caught on a fatal error, in either case clean up.
     finally:
         # If a driver was open, close the driver instance.
-        if endpoint_type == "table":
-            # noinspection PyUnboundLocalVariable
-            driver.quit()  # pager.driver
+        # noinspection PyUnboundLocalVariable
+        driver.quit()  # pager.driver
     return resource_list, glossary
 
 
-def write_glossary(domain='opendata.cityofnewyork.us', use_cache=True,
-                   endpoint_type="table", resource_filename=None, glossary_filename=None, timeout=60):
+def write_glossary(domain='opendata.cityofnewyork.us', use_cache=True, resource_filename=None,
+                   glossary_filename=None, timeout=60):
     """
     Writes a dataset representation.
 
@@ -343,7 +339,7 @@ def write_glossary(domain='opendata.cityofnewyork.us', use_cache=True,
 
     # Generate the glossaries.
     try:
-        resource_list, glossary = get_glossary(resource_list, glossary, domain=domain, endpoint_type=endpoint_type,
+        resource_list, glossary = get_glossary(resource_list, glossary, domain=domain,
                                                timeout=timeout)
 
     # Save output.

@@ -8,7 +8,7 @@ sys.path.append('../')
 
 import unittest
 
-from urban_physiology_toolkit.glossarizers import html_table
+from urban_physiology_toolkit.glossarizers import html
 import requests_mock
 
 
@@ -31,7 +31,7 @@ class TestExtractLinks(unittest.TestCase):
             # Interdict network requests to retrieve data from the localized store instead.
             mock.get(url, content=read_file("example-categorical-table.html"))
 
-            results = html_table._extract_links(url, "div.population-census")
+            results = html._extract_links(url, "div.population-census")
 
             assert len(results) == 42
             assert all([isinstance(r, str) for r in results])
@@ -48,7 +48,7 @@ class TestExtractLinks(unittest.TestCase):
             # Interdict network requests to retrieve data from the localized store instead.
             mock.get(url, content=read_file("example-link-table.html"))
 
-            results = html_table._extract_links(url, "div.archive-section", filter=filter_func)
+            results = html._extract_links(url, "div.archive-section", filter=filter_func)
 
             assert len(results) == 40
             assert all([r.split(".")[-1] == "pdf" for r in results])
