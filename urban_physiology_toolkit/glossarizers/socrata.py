@@ -122,10 +122,23 @@ def get_resource_list(domain, credentials):
 
 
 def write_resource_list(domain="data.cityofnewyork.us", filename="resource-list.json", use_cache=True,
-                        credentials="../../../auth/nyc-open-data.json"):
+                        credentials=None):
     """
-    Fetches a resource representation for a single resource type from a Socrata portal. Simple I/O wrapper around
-    get_resource_representation, using some utilities from utils.py.
+    Creates a resource list for the given Socrata domain and writes it to disc.
+
+    Parameters
+    ----------
+    domain: str, default "data.cityofnewyork.us"
+        The open data portal landing page URI.
+    filename: str
+        The name of the file to write the resource list to.
+    use_cache: bool, default True
+        Whether or not to overwrite an existing resource list, if one exists.
+    credentials: str
+        A path to the credentials file. This should be a JSON file containing a Socrata API token, as one is
+        necessary in order to make use of Socrata's API. A minimal credentials file looks like this:
+
+            {"token": "randomcharacters"}
     """
     # If the file already exists and we specify `use_cache=True`, simply return.
     if preexisting_cache(filename, use_cache):

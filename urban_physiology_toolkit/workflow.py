@@ -34,14 +34,14 @@ def generate_data_package_from_glossary_entry(entry):
 
     package = {
         # datapackage fields
-        'name': slugify(entry['name']),
+        'name': slugify(entry['name']) if 'name' in entry else hash(entry['resource']),
         'datapackage_version': '1.0-beta',
         'title': entry['name'],
-        'version': 'N/A',
-        'keywords': entry['keywords_provided'],
-        'description': entry['description'],
+        'version': None if 'N/A' not in entry else entry['N/A'],
+        'keywords': None if 'keywords_provided' not in entry else entry['keywords_provided'],
+        'description': None if 'description' not in entry else entry['description'],
         'licenses': [],
-        'sources': [{'title': source} for source in entry['sources']],
+        'sources': [{'title': source} for source in entry['sources']] if 'sources' in entry else None,
         'contributors': [],
         'maintainers': [],
         'publishers': [],

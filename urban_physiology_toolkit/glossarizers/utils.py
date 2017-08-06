@@ -20,8 +20,22 @@ def preexisting_cache(folder_filepath, use_cache):
 
 
 def write_resource_file(roi_repr, resource_filename):
-    with open(resource_filename, 'w') as fp:
-        json.dump(roi_repr, fp, indent=4)
+    # If a resource file already exists, only write in resources in the current `roi_repr` that do not already exist
+    # in the file.
+    if os.path.isfile(resource_filename):
+        with open(resource_filename, 'r') as fp:
+            existing_resources = json.load(fp)
+        existing_resource_uris = {r['resource'] for r in existing_resources}
+        resources_to_be_added = [r for r in roi_repr if r['resource'] not in existing_resource_uris]
+
+        resource_list = existing_resources + resources_to_be_added
+        with open(resource_filename, 'w') as fp:
+            json.dump(resource_list, fp, indent=4)
+
+    # If the resource file does not already exist, simply write `roi_repr` to file.
+    else:
+        with open(resource_filename, 'w') as fp:
+            json.dump(roi_repr, fp, indent=4)
 
 
 def write_glossary_file(glossary_repr, glossary_filename):
