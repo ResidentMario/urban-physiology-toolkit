@@ -332,7 +332,12 @@ def write_glossary(domain='opendata.cityofnewyork.us', use_cache=True, resource_
     Parameters
     ----------
     domain: str, default "opendata.cityofnewyork.us"
-        The open data portal landing page URI.
+        The open data portal landing page URI. Socrata automatically redirects requests to URIs corresponding with
+        expired, deleted, or invisible endpoints to the data portal homepage. This homepage may differ from the one
+        used to host the rest of the website: on the New York City Open data portal for example the root URL is
+        "opendata.cityofnewyork.us" (the default argument), but the datasets themselves are hosted from
+        "data.cityofnewyork.us". The latter not the former should be provided as the `domain`, not the former,
+        because otherwise there is no way to detect when a URI "bounce" occurs.
     use_cache: bool, default True
         If a glossaries already exists, whether to simply exit out or blow it away and create a new one (overwriting the
         old one).

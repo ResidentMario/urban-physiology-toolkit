@@ -28,7 +28,16 @@ def slugify(value):
 
 def generate_data_package_from_glossary_entry(entry):
     """
-    Given a glossary entry, returns a datapackage.json file for that entry.
+    Transforms a glossary entry into a data package field. Subroutine of `init_catalog`.
+
+    Parameters
+    ----------
+    entry: dict, required
+        The glossary entry being transformed.
+
+    Returns
+    -------
+    The packaged glossary entry.
     """
     no_transform_needed = entry['dataset'] == '.' and entry['preferred_format'] in ['csv', 'geojson']
 
@@ -62,7 +71,7 @@ def generate_data_package_from_glossary_entry(entry):
     # other glossary fields
     for field in ['page_views', 'preferred_mimetype', 'topics_provided', 'preferred_format', 'column_names',
                   'landing_page', 'last_updated', 'protocol', 'created']:
-        package[field] = entry[field]
+        package[field] = entry[field] if field in entry else None
 
     # populate the resources field directly, if appropriate.
     if no_transform_needed:
@@ -75,7 +84,22 @@ def generate_data_package_from_glossary_entry(entry):
 
 def init_catalog(glossary_filepath, root, max_filesize=None, max_columns=None):
     """
-    Initializes a catalog's folder structure for the given glossary at the given root folder.
+    Initializes a catalog's folder structure.
+
+    Parameters
+    ----------
+    glossary_filepath: str, required
+        The filepath location of the glossary file to be processed.
+    root: str, required
+        The folder path to which the catalog folder assemblage will be written.
+    max_filesize: int or float, optional
+        If specified, only glossary entries for resources less than this size in KB will be written to the catalog.
+        Otherwise, write everything. Note that glossary entries lacking a non-null `filesize` field will not be
+        filtered out.
+    max_columns: int, optional
+        If specified, only glossary entries for resources less than this length in terms of number of columns will be
+        written to the catalog.  Otherwise, write everything. Note that glossary entries lacking a non-null `columns`
+        field will not be filtered out.
     """
     from pathlib import Path
     import os
@@ -192,11 +216,15 @@ outputs = []
 
 def update_dag(root="."):
     """
-    Updates the Airscooter DAG so that it reflects the current state of the catalog. This op:
-    * Create a .airflow folder and Airflow DAG if one does not yet exist.
-    * Adds tasks with fleshed-out depositors and transforms to the DAG.
-    * Ignores incomplete transforms (the flag currently used is the presence of a # TOOD shebang line)
-    * Removes tasks defined in the DAG which are not also defined in the catalog tasks.
+    Updates the Airscooter DAG so that it reflects the current state of the catalog. This operation creates the
+    `.airflow` folder, initializes the `airflow` DAG, and adds all discoverable tasks to the DAG.
+
+    Note
+
+    Parameters
+    ----------
+    root: str, required
+        A folder path to the catalog root folder.
     """
     from airscooter.orchestration import Depositor, Transform
 
@@ -280,9 +308,13 @@ def update_dag(root="."):
 
 def finalize_catalog(root="."):
     """
-    Finalizes the catalog by removing any catalog and task folders that are in an incomplete state.
+    Removes any catalog and task folders that are in an incomplete state. This operation will not touch the
+    `.airflow` DAG however: to update *that*, see `update_dag`.
 
-    Note that to truly finalize the DAG, you will also need to run `update_dag` again.
+    Parameters
+    ----------
+    root: str, required
+        A folder path to the catalog root folder.
     """
     catalog_folders = os.listdir("{0}/catalog".format(root))
 
