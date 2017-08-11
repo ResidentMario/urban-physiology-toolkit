@@ -1,5 +1,6 @@
 """
-Socrata glossarizer.
+Socrata glossarizer. A general implementation reference is available online at
+https://github.com/ResidentMario/urban-physiology-toolkit/wiki/Glossarization-Notes:-Socrata.
 """
 
 import json
@@ -16,12 +17,24 @@ from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load
 
 def _resourcify(metadata, domain):
     """
-    Given Socrata API metadata about a certain endpoint (as well as the domain of the endpoint
-    e.g. "data.cityofnewyork.us", and the type, e.g. "table") return a resource-ified entry for the
+    Given raw Socrata API metadata about a certain endpoint, and its domain, return a resource-ified entry for the
     endpoint for inclusion in the resource listing.
+
+    Internal subroutine of the user-facing `write_resource_list`.
+
+    Parameters
+    ----------
+    metadata: dict, required
+        A Socrata portal metadata entry, as would be returned (in a list) by `pysocrata.get_datasets`.
+
+    domain: str, required
+        The Socrata portal domain. See the notes in the `write_resource_list` docstring.
+
+    Returns
+    -------
+    A resource list entry for the given resource.
     """
-    # Munge the Socrata API output a bit beforehand: in this case reworking the name references to match our
-    # volcabulary.
+    # Munge the Socrata API output a bit beforehand: in this case reworking the name references to match our volcab.
     type = metadata['resource']['type']
     volcab_map = {'dataset': 'table', 'href': 'link', 'map': 'geospatial dataset', 'file': 'blob'}
     resource_type = volcab_map[type]
@@ -84,7 +97,8 @@ def _resourcify(metadata, domain):
 def _get_portal_metadata(domain, credentials):
     """
     Given a domain, Socrata API credentials for that domain, and a type of endpoint of interest, returns the metadata
-    provided by the portal (via the pysocrata package).
+    provided by the portal. Internal subroutine of the user-facing `write_resource_list` method. Wraps
+    `pysocrata.get_datasets`.
     """
     # Load credentials.
     with open(credentials, "r") as fp:
@@ -94,13 +108,11 @@ def _get_portal_metadata(domain, credentials):
     # If the metadata doesn't already exist, use pysocrata to fetch portal metadata. Otherwise, use what's provided.
     resources = pysocrata.get_datasets(**auth)
 
-    # We exclude stories manually---this is a type of resource the Socrata API considers to be a dataset that we
-    # are not interested in.
+    # We exclude stories---this is a type of resource the Socrata API considers to be a dataset that we are not
+    # interested in.
     resources = [d for d in resources if d['resource']['type'] != 'story']
 
-    # We also exclude community-generated datasets. These are focus of our interest, and they interestingly cause
-    # technical hiccups when read in. For example, there is a community dataset in the NYC Open Data Portal with the
-    # id uacg-pexx that, when visited, just redirects back to the NYC Open Data homepage. Very strange.
+    # We also exclude community-generated datasets.
     resources = [r for r in resources if r['resource']['provenance'] != 'community']
 
     return resources
@@ -108,8 +120,9 @@ def _get_portal_metadata(domain, credentials):
 
 def get_resource_list(domain, credentials):
     """
-    Given a domain, Socrata API credentials for that domain, and a type of endpoint of interest, returns a full
-    resource representation (using resourcify) for each resource therein.
+    Given a portal domain and login credentials thereof, generate and return a resource list for this domain.
+
+    Non-IO subroutine of the user-facing `write_resource_list` method.
     """
     resources_metadata = _get_portal_metadata(domain, credentials)
 
@@ -129,11 +142,14 @@ def write_resource_list(domain="data.cityofnewyork.us", filename="resource-list.
     Parameters
     ----------
     domain: str, default "data.cityofnewyork.us"
-        The open data portal landing page URI.
+        The open data portal root URI. This should be the root URI that is used by endpoints on the portal,
+        which may *not* be the same as the URI used for the landing page.
     filename: str
         The name of the file to write the resource list to.
     use_cache: bool, default True
-        Whether or not to overwrite an existing resource list, if one exists.
+        If a resource file is already present at `filename` and `use_cache` is `True`, endpoints already in that
+        file will be left untouched and ones that are not will be appended on. If `use_cache` is `False` the file
+        will be overwritten instead.
     credentials: str
         A path to the credentials file. This should be a JSON file containing a Socrata API token, as one is
         necessary in order to make use of Socrata's API. A minimal credentials file looks like this:
@@ -144,40 +160,65 @@ def write_resource_list(domain="data.cityofnewyork.us", filename="resource-list.
     if preexisting_cache(filename, use_cache):
         return
 
-    # Generate to file and exit.
+    # Otherwise generate to file and exit.
     roi_repr = []
     roi_repr += get_resource_list(domain, credentials)
     write_resource_file(roi_repr, filename)
 
 
-def _glossarize_table(resource, domain, driver=None, timeout=60):
+def _glossarize_table(resource_entry, domain, driver=None, timeout=60):
     """
-    Given an individual resource (as would be loaded from the resource list) and a domain, and optionally a
-    PhantomJS driver (recommended), creates a glossaries entry for that resource.
+    Given a tabular resource entry, a domain, and a PhantomJS driver, creates and returns a glossary entry for that
+    resource. Internal subroutine to `_write_glossary`.
+
+    Parameters
+    ----------
+    resource_entry: dict, required
+        The resource entry to be glossarized. Must correspond with a tabular resource and must contain a `landing_page`
+        key.
+    domain: str, required
+        The open data portal landing page URI. See the `_write_glossary` docstring for particularities.
+    driver: PhantomJS driver, recommended
+        A `selenium` PhantomJS driver. If this parameter is left blank a new driver will be created and then exited
+        out of during the course of running this method. This is useful in testing but heavily inadvisable in
+        production.
+    timeout: int, default 60
+        A timeout on how long the glossarizer can spend attempting to download a Socrata portal dataset landing page
+        before giving up. This UI scrape is necessary to "size up" the table and provide `rows` and `columns` fields
+        in the method output.
+
+    Returns
+    -------
+    If the method executes successfully, returns a glossary entry for the given resource that is fit for inclusion
+    in the given glossary. If the method fails because the endpoint in question was removed or made private (in
+    which case a 301 Redirect to the portal landing page is issued), prints (!) a warning and returns an empty list.
+    If the method fails because the headless request to the resource landing page took too long, prints (!) a
+    warning and returns a similarly empty list.
     """
     from .pager import page_socrata_for_endpoint_size, DeletedEndpointException
 
     # If a PhantomJS driver has not been initialized (via import), initialize it now.
-    # In this case we will also quit it out at the end of the process.
-    # This is inefficient, but useful for testing.
     driver_passed = bool(driver)
     if not driver_passed:
         from .pager import driver
 
     # TODO: Raise actual warnings here (instead of emitting print statements).
     try:
-        rowcol = page_socrata_for_endpoint_size(domain, resource['landing_page'], timeout=timeout)
+        rowcol = page_socrata_for_endpoint_size(domain, resource_entry['landing_page'], timeout=timeout)
     except DeletedEndpointException:
-        print("WARNING: the '{0}' endpoint was deleted.".format(resource['landing_page']))
-        resource['flags'].append('removed')
+        print("WARNING: the '{0}' endpoint was deleted.".format(resource_entry['landing_page']))
+        resource_entry['flags'].append('removed')
         return []
     except TimeoutException:
-        print("WARNING: the '{0}' endpoint took too long to process.".format(resource['landing_page']))
-        resource['flags'].append('removed')
+        print("WARNING: the '{0}' endpoint took too long to process.".format(resource_entry['landing_page']))
+        resource_entry['flags'].append('removed')
         return []
 
+    # If no errors were caught, write and return. Uncaught (fatal) errors are sent to the `_get_glossary` outer
+    # finally block.
+
     # Remove the "processed" flag from the resource going into the glossaries, if one exists.
-    glossarized_resource = resource.copy()
+    glossarized_resource = resource_entry.copy()
     glossarized_resource['flags'] = [flag for flag in glossarized_resource['flags'] if flag != 'processed']
 
     # Attach sizing information.
@@ -189,8 +230,7 @@ def _glossarize_table(resource, domain, driver=None, timeout=60):
     glossarized_resource['preferred_format'] = 'csv'
     glossarized_resource['preferred_mimetype'] = 'text/csv'
 
-    # If no repairable errors were caught, write in the information.
-    # (if a non-repairable error was caught the data gets sent to the outer finally block)
+    # If a fatal error was caught the data gets sent to the outer (`get_glossary`) finally block.
     glossarized_resource['dataset'] = '.'
 
     if not driver_passed:
@@ -199,13 +239,29 @@ def _glossarize_table(resource, domain, driver=None, timeout=60):
     return [glossarized_resource]
 
 
-def _glossarize_nontable(resource, timeout):
+def _glossarize_nontable(resource_entry, timeout=60):
     """
-    Same as `glossarize_table`, but for the non-table resource types.
+    Given a nontabular resource entry, returns a glossary entry for that resource. Internal subroutine to
+    `_write_glossary`.
 
-    This method predates the generic `utils.generic_glossarize_resource` method, which does about the same thing but
-    is portable and more conformant.
+    Parameters
+    ----------
+    resource_entry: dict, required
+        The resource entry to be glossarized. Must correspond with a nontabular resource and must contain a
+        `landing_page` key.
+    timeout: int, default 60
+        A timeout on how long the glossarizer can spend attempting to download the given resource before giving up.
+        This download is necessary because Socrata does not provide `content-length` information in its data
+        transfer headers, meaning the only way to know the size of a resource -- an operational necessity -- is to
+        (attempt to) download it yourself.
+
+    Returns
+    -------
+    If the method executes successfully, returns a glossary entry for the given resource that is fit for inclusion
+    in the given glossary. If the method fails because an error was raised, prints (!) a warning and returns an empty
+    list.
     """
+
     # TODO: Refactor this convoluted method into a simpler `utils.generic_glossarize_resource` wrapper.
 
     import zipfile
@@ -213,13 +269,13 @@ def _glossarize_nontable(resource, timeout):
 
     try:
         sizings = _get_sizings(
-            resource['resource'], timeout=timeout
+            resource_entry['resource'], timeout=timeout
         )
     except zipfile.BadZipfile:
         # cf. https://github.com/ResidentMario/datafy/issues/2
         # print("WARNING: the '{0}' endpoint is either misformatted or contains multiple levels of "
         #       "archiving which failed to process.".format(resource['landing_page']))
-        resource['flags'].append('error')
+        resource_entry['flags'].append('error')
         return []
     # This error is raised when the process takes too long.
     except ChunkedEncodingError:
@@ -227,12 +283,14 @@ def _glossarize_nontable(resource, timeout):
         #     resource['landing_page'], timeout))
         # TODO: Is this the right thing to do?
         return []
+    except (KeyboardInterrupt, SystemExit):
+        raise
     except:
         # External links may point anywhere, including HTML pages which don't exist or which raise errors when you
         # try to visit them. During testing this occurred with e.g. https://data.cityofnewyork.us/d/sah3-jw2y. It's
         # impossible to exclude everything; best we can do is raise a warning.
-        print("WARNING: an error was raised while processing the '{0}' endpoint.".format(resource['landing_page']))
-        resource['flags'].append('error')
+        print("WARNING: an error was raised while processing the '{0}' endpoint.".format(resource_entry['landing_page']))
+        resource_entry['flags'].append('error')
         return []
 
     # If successful, append the result to the glossaries.
@@ -254,7 +312,7 @@ def _glossarize_nontable(resource, timeout):
             # problematic endpoints.
             if sizing['extension'] != "htm" and sizing['extension'] != "html":
                 # Remove the "processed" flag from the resource going into the glossaries, if one exists.
-                glossarized_resource_element = resource.copy()
+                glossarized_resource_element = resource_entry.copy()
                 glossarized_resource_element['flags'] = [flag for flag in glossarized_resource_element['flags'] if
                                                          flag != 'processed']
 
@@ -278,7 +336,7 @@ def _glossarize_nontable(resource, timeout):
 
     # If unsuccessful, append a signal result to the glossaries.
     else:
-        glossarized_resource_element = resource.copy()
+        glossarized_resource_element = resource_entry.copy()
 
         glossarized_resource_element['flags'] = [flag for flag in glossarized_resource_element['flags'] if
                                          flag != 'processed']
@@ -290,13 +348,16 @@ def _glossarize_nontable(resource, timeout):
 
 
 def get_glossary(resource_list, glossary, domain='opendata.cityofnewyork.us', timeout=60):
-    # Whether we succeed or fail, we'll want to save the data we have at the end with a try-finally block.
+    """
+    Given a resource list and an extant glossary, generate and return an updated glossary.
+
+    Non-IO subroutine of the user-facing `write_glossary` method.
+    """
     try:
         tables = [r for r in resource_list if r['resource_type'] == "table"]
         nontables = [r for r in resource_list if r['resource_type'] != "table"]
 
         # tables:
-        # TODO: GitHub issue the driver thing.
         from .pager import driver
 
         for resource in tqdm(tables):
@@ -309,7 +370,7 @@ def get_glossary(resource_list, glossary, domain='opendata.cityofnewyork.us', ti
 
         # geospatial datasets, blobs, links:
         for resource in tqdm(nontables):
-            glossarized_resource = _glossarize_nontable(resource, timeout)
+            glossarized_resource = _glossarize_nontable(resource, timeout=timeout)
             glossary += glossarized_resource
 
             # Update the resource list to make note of the fact that this job has been processed.
@@ -324,10 +385,10 @@ def get_glossary(resource_list, glossary, domain='opendata.cityofnewyork.us', ti
     return resource_list, glossary
 
 
-def write_glossary(domain='opendata.cityofnewyork.us', use_cache=True, resource_filename=None,
-                   glossary_filename=None, timeout=60):
+def write_glossary(domain='opendata.cityofnewyork.us', resource_filename=None, glossary_filename=None,
+                   use_cache=True, timeout=60):
     """
-    Writes a dataset representation.
+    Use a resource file to write a glossary to disc.
 
     Parameters
     ----------
@@ -338,21 +399,21 @@ def write_glossary(domain='opendata.cityofnewyork.us', use_cache=True, resource_
         "opendata.cityofnewyork.us" (the default argument), but the datasets themselves are hosted from
         "data.cityofnewyork.us". The latter not the former should be provided as the `domain`, not the former,
         because otherwise there is no way to detect when a URI "bounce" occurs.
-    use_cache: bool, default True
-        If a glossaries already exists, whether to simply exit out or blow it away and create a new one (overwriting the
-        old one).
-    endpoint_type: str, default "table"
-        The resource type to build a glossaries for. Options are "table", "blob", "geospatial dataset", and "link".
-    timeout: int, default 60
-        The maximum amount of time to spend downloading data before killing the process. This is implemented so that
-        occasional very large datasets do not crash the process.
     resource_filename: str
-        The name of the resource file to read the jobs from.
+        A path to a resource file to read processing jobs from.
     glossary_filename: str
-        The name of the glossaries file to write the output to.
+        A path to a glossary file to write output to.
+    use_cache: bool, default True
+        If a glossary file is already present at `glossary_filename` and `use_cache` is `True`, endpoints already in
+        that file will be left untouched and ones that are not will be appended on. If `use_cache` is `False` the
+        file will be overwritten instead.
+    timeout: int, default 60
+        A timeout on how long the glossarizer can spend downloading a resource before timing it out. This prevents
+        occasional very large datasets from overwhelming your CPU. Resources that time out will be populated in the
+        glossary with a `filesize` field indicating how long they were downloading for before timing out.
     """
 
-    # Begin by loading in the data that we have.
+    # Load the glossarization to-do list.
     resource_list, glossary = load_glossary_todo(resource_filename, glossary_filename, use_cache)
 
     # Generate the glossaries.

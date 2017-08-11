@@ -1,5 +1,6 @@
 """
-CKAN glossarizer.
+CKAN glossarizer. A general implementation reference is available online at
+https://github.com/ResidentMario/urban-physiology-toolkit/wiki/Glossarization-Notes:-CKAN.
 """
 
 import warnings
@@ -12,6 +13,25 @@ from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load
 
 
 def write_resource_list(domain="data.gov.sg", filename=None, use_cache=True, protocol='https'):
+    """
+    Creates a resource list for the given Socrata domain and writes it to disc.
+
+    Parameters
+    ----------
+    domain: str, default "data.gov.sg"
+        The open data portal root URI.
+    filename: str
+        The name of the file to write the resource list to.
+    use_cache: bool, default True
+        If a resource file is already present at `filename` and `use_cache` is `True`, endpoints already in that
+        file will be left untouched and ones that are not will be appended on. If `use_cache` is `False` the file
+        will be overwritten instead.
+    protocol: {'http', 'https'}, default 'https'
+        The transfer protocol the portal in question uses. This is used to construct all queries to e.g. the portal
+        API. Although the Internet as a whole is moving towards HTTPS, because CKAN is a federated run-local asset,
+        many of the portals online are still on HTTP.
+    """
+
     # If the file already exists and we specify `use_cache=True`, simply return.
     if preexisting_cache(filename, use_cache):
         return
@@ -165,6 +185,28 @@ def write_resource_list(domain="data.gov.sg", filename=None, use_cache=True, pro
 
 def write_glossary(domain="data.gov.sg", resource_filename=None, glossary_filename=None,
                    use_cache=True, timeout=60):
+    """
+    Use a resource file to write a glossary to disc.
+
+    Parameters
+    ----------
+    domain: str, default "odata.gov.sg"
+        The open data portal landing page URI.
+    resource_filename: str
+        A path to a resource file to read processing jobs from.
+    glossary_filename: str
+        A path to a glossary file to write output to.
+    use_cache: bool, default True
+        If a glossary file is already present at `glossary_filename` and `use_cache` is `True`, endpoints already in
+        that file will be left untouched and ones that are not will be appended on. If `use_cache` is `False` the
+        file will be overwritten instead.
+    timeout: int, default 60
+        A timeout on how long the glossarizer can spend downloading a resource before timing it out. This prevents
+        occasional very large datasets from overwhelming your CPU. Resources that time out will be populated in the
+        glossary with a `filesize` field indicating how long they were downloading for before timing out.
+    """
+
+    # Load the glossarization to-do list.
     resource_list, glossary = load_glossary_todo(resource_filename, glossary_filename, use_cache=use_cache)
 
     @timeout_process(timeout)
