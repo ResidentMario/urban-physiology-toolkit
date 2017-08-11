@@ -12,7 +12,7 @@ from selenium.common.exceptions import TimeoutException
 from tqdm import tqdm
 
 from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load_glossary_todo,
-                                                         write_resource_file, write_glossary_file, _get_sizings)
+                                                         write_resource_file, write_glossary_file, get_sizings)
 
 
 def _resourcify(metadata, domain):
@@ -147,9 +147,7 @@ def write_resource_list(domain="data.cityofnewyork.us", filename="resource-list.
     filename: str
         The name of the file to write the resource list to.
     use_cache: bool, default True
-        If a resource file is already present at `filename` and `use_cache` is `True`, endpoints already in that
-        file will be left untouched and ones that are not will be appended on. If `use_cache` is `False` the file
-        will be overwritten instead.
+        If a resource file is already present at `filename` and `use_cache` is `True`, return immediately.
     credentials: str
         A path to the credentials file. This should be a JSON file containing a Socrata API token, as one is
         necessary in order to make use of Socrata's API. A minimal credentials file looks like this:
@@ -268,7 +266,7 @@ def _glossarize_nontable(resource_entry, timeout=60):
     from requests.exceptions import ChunkedEncodingError
 
     try:
-        sizings = _get_sizings(
+        sizings = get_sizings(
             resource_entry['resource'], timeout=timeout
         )
     except zipfile.BadZipfile:

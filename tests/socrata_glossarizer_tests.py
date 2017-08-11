@@ -14,10 +14,10 @@ def test_get_portal_metadata():
     Test whether or not the metadata returned by our processor still fits the format of the metadata that we
     expect from Socrata. Note that similar tests are a to-do for the pysocrata test suite.
 
-    This test is network-dependent and will fail if the Socrata portal metdata stream goes down.
+    This test is network-dependent and will fail if the Socrata portal metadata stream goes down.
     """
 
-    tables = socrata._get_portal_metadata("data.cityofnewyork.us", "auth/nyc-open-data.json", "table")
+    tables = socrata._get_portal_metadata("data.cityofnewyork.us", "auth/nyc-open-data.json")
     assert len(tables) > 1000
 
     # Take an example dataset. Note that if this example dataset ever gets deleted, this test will fail,
@@ -31,10 +31,10 @@ def test_get_portal_metadata():
     assert set(toi['metadata'].keys()) == {'license', 'domain'}
     assert set(toi['classification'].keys()) == {'tags', 'categories', 'domain_category', 'domain_tags',
                                                  'domain_metadata'}
-    assert set(toi['resource'].keys()) == {'parent_fxf', 'columns_description', 'columns_field_name', 'provenance',
-                                           'description', 'view_count', 'name', 'id', 'type', 'updatedAt',
-                                           'download_count', 'attribution', 'createdAt', 'page_views',
-                                           'columns_name'}
+    assert set(toi['resource'].keys()) == {'view_count', 'columns_field_name', 'provenance', 'id', 'download_count',
+                                           'description', 'createdAt', 'page_views', 'columns_name', 'parent_fxf',
+                                           'updatedAt', 'type', 'columns_datatype', 'name', 'attribution',
+                                           'columns_description'}
 
 
 def test_resourcify():
@@ -45,10 +45,10 @@ def test_resourcify():
     """
     with open("data/example_metadata-f4rp-2kvy.json", "r") as fp:
         toi_metadata = json.load(fp)
-    resource = socrata._resourcify(toi_metadata, domain="data.cityofnewyork.us", endpoint_type="table")
+    resource = socrata._resourcify(toi_metadata, domain="data.cityofnewyork.us")
     assert resource.keys() == {'sources', 'flags', 'topics_provided', 'created', 'name', 'protocol', 'description',
                                'column_names', 'page_views', 'resource', 'last_updated', 'keywords_provided',
-                               'landing_page'}
+                               'landing_page', 'resource_type'}
 
 
 class TestGlossarize(unittest.TestCase):
@@ -64,29 +64,29 @@ class TestGlossarize(unittest.TestCase):
         self.table_glossary_keys = {'available_formats', 'resource', 'page_views', 'sources', 'created', 'description',
                                     'protocol', 'last_updated', 'dataset', 'column_names', 'rows', 'topics_provided',
                                     'preferred_mimetype','name', 'preferred_format', 'columns', 'flags',
-                                    'keywords_provided', 'landing_page'}
+                                    'keywords_provided', 'landing_page', 'resource_type'}
         self.nontable_glossary_keys = {'resource', 'column_names', 'created', 'page_views', 'landing_page', 'flags',
                                        'keywords_provided', 'name', 'description', 'last_updated', 'filesize',
                                        'dataset','preferred_format', 'protocol', 'sources', 'preferred_mimetype',
-                                       'topics_provided'}
+                                       'topics_provided', 'resource_type'}
 
     def test_glossarize_table(self):
         with open("data/example_metadata-f4rp-2kvy.json", "r") as fp:
-            resource = socrata._resourcify(json.load(fp), "data.cityofnewyork.us", "table")
+            resource = socrata._resourcify(json.load(fp), "data.cityofnewyork.us")
 
         glossarized_resource = socrata._glossarize_table(resource, "opendata.cityofnewyork.us")
         assert glossarized_resource[0].keys() == self.table_glossary_keys
 
     def test_glossarize_nontable_blob(self):
         with open("data/example_metadata-q68s-8qxv.json", "r") as fp:
-            resource = socrata._resourcify(json.load(fp), "data.cityofnewyork.us", "blob")
+            resource = socrata._resourcify(json.load(fp), "data.cityofnewyork.us")
 
         glossarized_resource = socrata._glossarize_nontable(resource, 20)
         assert glossarized_resource[0].keys() == self.nontable_glossary_keys
 
     def test_glossarize_nontable_geospatial_dataset(self):
         with open("data/example_metadata-ghq4-ydq4.json", "r") as fp:
-            resource = socrata._resourcify(json.load(fp), "data.cityofnewyork.us", "geospatial dataset")
+            resource = socrata._resourcify(json.load(fp), "data.cityofnewyork.us")
 
         glossarized_resource = socrata._glossarize_nontable(resource, 20)
         assert glossarized_resource[0].keys() == self.nontable_glossary_keys
@@ -96,7 +96,7 @@ class TestGlossarize(unittest.TestCase):
         External links pointing to HTML landing pages should be ignored by the glossarizer.
         """
         with open("data/example_metadata-mmu8-8w8b.json", "r") as fp:
-            resource = socrata._resourcify(json.load(fp), "data.cityofnewyork.us", "link")
+            resource = socrata._resourcify(json.load(fp), "data.cityofnewyork.us")
 
         glossarized_resource = socrata._glossarize_nontable(resource, 20)
         assert len(glossarized_resource) == 0
@@ -106,7 +106,7 @@ class TestGlossarize(unittest.TestCase):
         External links pointing to externally-hosted resources should be pulled in however.
         """
         with open("data/example_metadata-p94q-8hxh.json", "r") as fp:
-            resource = socrata._resourcify(json.load(fp), "data.cityofnewyork.us", "link")
+            resource = socrata._resourcify(json.load(fp), "data.cityofnewyork.us")
 
         glossarized_resource = socrata._glossarize_nontable(resource, 20)
         assert glossarized_resource[0].keys() == self.nontable_glossary_keys

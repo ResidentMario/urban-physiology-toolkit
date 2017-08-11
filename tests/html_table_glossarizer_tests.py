@@ -50,5 +50,5 @@ class TestExtractLinks(unittest.TestCase):
 
             results = html._extract_links(url, "div.archive-section", filter=filter_func)
 
-            assert len(results) == 40
+            assert len(results) == 32
             assert all([r.split(".")[-1] == "pdf" for r in results])

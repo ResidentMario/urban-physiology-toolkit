@@ -1,5 +1,5 @@
 """
-Generic methods common across all or many glossarizers.
+Generic methods common across multiple glossarizers.
 """
 
 import os
@@ -13,29 +13,32 @@ import warnings
 
 
 def preexisting_cache(folder_filepath, use_cache):
-    # If the file already exists and we specify `use_cache=True`, simply return.
-    preexisting = os.path.isfile(folder_filepath)
-    if preexisting and use_cache:
-        return
+    """
+    If the file already exists and `use_cache` is `True`, return immediately.
+    """
+    return use_cache and os.path.isfile(folder_filepath)
 
 
-def write_resource_file(roi_repr, resource_filename):
-    # If a resource file already exists, only write in resources in the current `roi_repr` that do not already exist
-    # in the file.
+def write_resource_file(resource_listings, resource_filename):
+    """
+    Writes a resource list to a file. Handles merging duplicate and preexisting records.
+    """
+    # If a resource file already exists, only write in resources in the current resource listing that do not already
+    # exist in the file.
     if os.path.isfile(resource_filename):
         with open(resource_filename, 'r') as fp:
             existing_resources = json.load(fp)
         existing_resource_uris = {r['resource'] for r in existing_resources}
-        resources_to_be_added = [r for r in roi_repr if r['resource'] not in existing_resource_uris]
+        resources_to_be_added = [r for r in resource_listings if r['resource'] not in existing_resource_uris]
 
         resource_list = existing_resources + resources_to_be_added
         with open(resource_filename, 'w') as fp:
             json.dump(resource_list, fp, indent=4)
 
-    # If the resource file does not already exist, simply write `roi_repr` to file.
+    # If the resource file does not already exist, simply write what we get to file.
     else:
         with open(resource_filename, 'w') as fp:
-            json.dump(roi_repr, fp, indent=4)
+            json.dump(resource_listings, fp, indent=4)
 
 
 def write_glossary_file(glossary_repr, glossary_filename):
@@ -44,6 +47,11 @@ def write_glossary_file(glossary_repr, glossary_filename):
 
 
 def load_glossary_todo(resource_filename, glossary_filename, use_cache=True):
+    """
+    Loads and returns the resource list and glossary corresponding with the given `resource_filename` and
+    `glossary_filename`, respectively. Handles merging duplicate and preexisting records.
+    """
+
     # Begin by loading in the data that we have.
     with open(resource_filename, "r") as fp:
         resource_list = json.load(fp)
@@ -73,7 +81,7 @@ def load_glossary_todo(resource_filename, glossary_filename, use_cache=True):
 ####################
 
 
-def timeout_process(seconds=10, error_message=os.strerror(errno.ETIME)):
+def __timeout_process(seconds=10, error_message=os.strerror(errno.ETIME)):
     """
     Times out a process. Taken from Stack Overflow: 2281850/timeout-function-if-it-takes-too-long-to-finish.
 
@@ -124,75 +132,97 @@ def timeout_process(seconds=10, error_message=os.strerror(errno.ETIME)):
     return decorator
 
 
-def _get_sizings(uri, timeout=60):
+def get_sizings(uri, timeout=60):
     """
-    Given a URI, attempts to download it within `timeout` seconds. This method throws a
-    `requests.exceptions.ChunkedEncodingError` if it does not succeed before the timeout is reached. It does no
-    error handling on its own, so if the download fails due to some other reason it will raise. Otherwise,
-    if the download succeeds (the entire file is downloaded within `timeout` seconds), returns a structured list of
-    dicts of size and type-related metadata on the downloaded file. This data comes in the form of a list because if
-    the file is an archival file (a ZIP file), the file will be unpacked locally and its contents will be
-    inspected and recorded. On the other hand, if the file being downloaded is singular, the list will only have one
-    element.
+    Given a URI, attempts to download it within `timeout` seconds. On success, returns size and format information on
+    the downloaded data.
 
-    This method uses `timeout_process`, above, and adapts the separately packaged `datafy` module to do processing.
+    A timed (using `__timeout_process`) wrapper of the externally-packaged `datafy.get` method.
 
-    The developer-facing wrapper for this method is `attach_filesize_to_resource`.
+    Parameters
+    ----------
+    uri: str, required
+        The resource URI.
+    timeout: int, required
+        The timeout assigned to this resource download.
+
+    Returns
+    -------
+
+    If the download succeeds (the entire file is downloaded within `timeout` seconds), returns a structured list of
+    dicts of size and type-related metadata on the downloaded file. Each entry in the list will be of the following
+    format:
+
+        {'filesize': int, 'filepath': str, 'mimetype': str, 'extension': str}
+
+    The list will consist of only one entry if the resource contains a single file, and multiple entries if the
+    resource contains many files. Note that as packaged resources may contain metadata and junk files,
+    not just data, the references contained in this list are not datasets *per se*.
+
+    If the download times out, raises a `requests.exceptions.ChunkedEncodingError`, a generic error returned
+    whenever `requests` is cut off whilst downloading (see further the `__timeout_process` docstring). All other
+    errors are uncaught and get raised upstream.
     """
     import datafy
     import sys
 
-    @timeout_process(timeout)
+    @__timeout_process(timeout)
     def _size_up(uri):
         resource = datafy.get(uri)
-        thing_log = []
-        for thing in resource:
-            thing_log.append({
-                'filesize': sys.getsizeof(thing['data'].content) / 1024,
-                'dataset': thing['filepath'],
-                'mimetype': thing['mimetype'],
-                'extension': thing['extension']
+        resource_components = []
+        for resource_component in resource:
+            resource_components.append({
+                'filesize': sys.getsizeof(resource_component['data'].content) / 1024,
+                'dataset': resource_component['filepath'],
+                'mimetype': resource_component['mimetype'],
+                'extension': resource_component['extension']
             })
-        return thing_log
+        return resource_components
 
     return _size_up(uri)
 
 
 def generic_glossarize_resource(resource, timeout):
     """
-    Given a resource entry and a timeout, writes `filesize`, `preferred_format`, `preferred_mimetype`, and `dataset`
-    fields into a glossarization of that resource entry. Also attached a "processed" flag to that resource's `flags`
-    field. This method is the brute force way of glossarizing a resource; it should only be used if no faster way
-    getting this same information is found.
+    A generic resource glossarization method that transforms a resource entry into a glossary entry by attempting to
+    download it within `timeout` seconds.
 
-    This method does its job by calling the `_get_sizings` method above (itself reliant on the separately-packaged
-    `datafy` module) and processing the result.
+    This method should only be used if no `content-length` header is provided by the server and no other method of
+    finding out filesize (such as by perusing an API) exists.
 
-    What happens next depends on what the result is:
-
-    If the resource cannot be downloaded in `timeout` seconds, the `filesize` field will be filled with an entry
-    of the form `">Ns", where N is timeout, and a glossary entry will be returned.
-
-    If the process fails during the download due to an unrelated error, an "error" string is appended to the
-    resource flags, and an empty list will be returned.
-
-    If the process fails during processing because of bad data formatting in a compressed file, an "error" string is
-    again appended to the resource flags, and an empty list will be returned.
-
-    If the process succeeds, but we discover that our result is an HTML file (this occurs in the case of external
-    links to landing pages), an empty list will be returned.
+    Parameters
+    ----------
+    resource: dict, required
+        A resource entry for processing.
+    timeout: int, required
+        The timeout assigned to this resource download.
 
     Returns
     -------
 
     This method returns a tuple with two elements in it: the modified resource entry, and a list of generated
     glossary entries.
+
+    The second element returned will correspond with the given resource with `filesize`, `preferred_format`,
+    `preferred_mimetype`, `resource`, and `dataset` field filled in.
+
+    If the resource cannot be downloaded in `timeout` seconds, the `filesize` field will be filled with an entry
+    of the form `">Ns", where N is the timeout.
+
+    If the process fails during the download due to an unrelated error, a warning will be raised, an "error" string is
+    appended to the resource flags, and an empty list will be returned.
+
+    If the process fails during processing because of bad data formatting in a compressed file, a warning will the
+    raised and an "error" string is again appended to the resource flags. An empty list will be returned.
+
+    If the process succeeds, but we discover that our result is an HTML file (this occurs in the case of external
+    links to landing pages), an empty list will be returned.
     """
     import zipfile
     from requests.exceptions import ChunkedEncodingError
 
     try:
-        sizings = _get_sizings(
+        sizings = get_sizings(
             resource['resource'], timeout=timeout
         )
     except (KeyboardInterrupt, SystemExit):

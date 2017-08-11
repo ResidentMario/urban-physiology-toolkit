@@ -8,13 +8,13 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 
-from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load_glossary_todo,
-                                                         write_resource_file, write_glossary_file, timeout_process)
+from urban_physiology_toolkit.glossarizers.utils import (preexisting_cache, load_glossary_todo, write_resource_file,
+                                                         write_glossary_file, get_sizings)
 
 
 def write_resource_list(domain="data.gov.sg", filename=None, use_cache=True, protocol='https'):
     """
-    Creates a resource list for the given Socrata domain and writes it to disc.
+    Creates a resource list for the given CKAN domain and writes it to disc.
 
     Parameters
     ----------
@@ -23,9 +23,7 @@ def write_resource_list(domain="data.gov.sg", filename=None, use_cache=True, pro
     filename: str
         The name of the file to write the resource list to.
     use_cache: bool, default True
-        If a resource file is already present at `filename` and `use_cache` is `True`, endpoints already in that
-        file will be left untouched and ones that are not will be appended on. If `use_cache` is `False` the file
-        will be overwritten instead.
+        If a resource file is already present at `filename` and `use_cache` is `True`, return immediately.
     protocol: {'http', 'https'}, default 'https'
         The transfer protocol the portal in question uses. This is used to construct all queries to e.g. the portal
         API. Although the Internet as a whole is moving towards HTTPS, because CKAN is a federated run-local asset,
@@ -190,7 +188,7 @@ def write_glossary(domain="data.gov.sg", resource_filename=None, glossary_filena
 
     Parameters
     ----------
-    domain: str, default "odata.gov.sg"
+    domain: str, default "data.gov.sg"
         The open data portal landing page URI.
     resource_filename: str
         A path to a resource file to read processing jobs from.
@@ -208,27 +206,6 @@ def write_glossary(domain="data.gov.sg", resource_filename=None, glossary_filena
 
     # Load the glossarization to-do list.
     resource_list, glossary = load_glossary_todo(resource_filename, glossary_filename, use_cache=use_cache)
-
-    @timeout_process(timeout)
-    def _size_up(uri):
-        import sys
-        import datafy
-
-        # Couldn't determine meaning of the application/CDFV2-unknown content-type associated with the URI
-        # http://maps.data.ug/geoserver/wfs?typename=geonode%3Aaveragepovertygap&outputFormat=excel&version=1.0.0&request=GetFeature&service=WFS
-        # To whit: this is an issue with XLS/Word XML format documents that occassionally crops up in file format
-        # detectors, cf. https://www.google.com/search?q=CDFV2-unknown&oq=CDFV2-unknown&aqs=chrome..69i57&sourceid=chrome&ie=UTF-8
-
-        resource = datafy.get(uri)
-        thing_log = []
-        for thing in resource:
-            thing_log.append({
-                'filesize': sys.getsizeof(thing['data'].content) / 1024,
-                'dataset': thing['filepath'],
-                'mimetype': thing['mimetype'],
-                'extension': thing['extension']
-            })
-        return thing_log
 
     # Whether we succeed or fail, we'll want to save the data we have at the end with a try-finally block.
     try:
@@ -254,7 +231,7 @@ def write_glossary(domain="data.gov.sg", resource_filename=None, glossary_filena
 
             # If we error out, this is a packaged/gzipped file. Do sizing the basic way, with a GET request.
             except KeyError:
-                dataset_repr = _size_up(resource['resource'])
+                dataset_repr = get_sizings(resource['resource'])
                 try:
                     glossarized_resource['filesize'] = dataset_repr[0]['filesize']
                     glossarized_resource['dataset'] = dataset_repr[0]['dataset']

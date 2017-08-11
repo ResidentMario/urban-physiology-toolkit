@@ -1,5 +1,6 @@
 """
-Glossarizer tools for domains hosting data using (simple ones for now, meaning, non-AJAX) HTML tables.
+HTML glossarizer. Currently limited to non-AJAX HTML tables. A general implementation reference is available online at
+https://github.com/ResidentMario/urban-physiology-toolkit/wiki/Glossarization-Notes:-HTML.
 """
 
 import requests
@@ -19,7 +20,7 @@ from tqdm import tqdm
 
 def _extract_links(url, selector, filter=None):
     """
-    Extracts a list of links from a non-AJAX HTML page, optionally applying a filter to the results.
+    Extracts a list of links from an HTML page, optionally applying a filter to the results.
 
     Parameters
     ----------
@@ -58,23 +59,26 @@ def _extract_links(url, selector, filter=None):
     return list(set(links))
 
 
-#######################
-# USER-FACING METHODS #
-#######################
+#############################
+# WRAPPERS AND USER METHODS #
+#############################
 
 def get_resource_list(domain=None):
     """
-    Generates a resource list for the given domain.
+    Generates a resource list for the given domain. Non-IO subroutine of the user-facing `write_resource_list`.
 
-    Domains are implemented by hand on a per-provider basis, so this method is a sequence of if-else statements.
+    Parameters
+    ----------
+    domain: str, required
+        A domain. See further the `write_resource_list` docstring.
 
     Returns
     -------
-    Returns the resource list for the given input.
+    Returns the resource list for the given domain.
     """
     # TODO: Harden against network failures using https://github.com/rholder/retrying
-    if domain == "http://www.mdps.gov.qa/en/statistics1/Pages/default.aspx":
-        return get_qatari_ministry_of_planning_and_statistics_resource_list()
+    if "mdps.gov.qa/en/statistics1/Pages/default.aspx" in domain:
+        return _get_qatari_ministry_of_planning_and_statistics_resource_list()
     # All other HTML grabbers have not been implemented yet.
     elif domain is None:
         raise ValueError("No domain was provided.")
@@ -84,7 +88,16 @@ def get_resource_list(domain=None):
 
 def write_resource_list(domain=None, filename=None, use_cache=True):
     """
-    Writes the resource list for the given domain.
+    Creates a resource list for the given domain and writes it to disc.
+
+    Parameters
+    ----------
+    domain: str, required
+        A domain. Must be one of the implemented domains, e.g. "mdps.gov.qa/en/statistics1/Pages/default.aspx".
+    filename: str
+        The name of the file to write the resource list to.
+    use_cache: bool, default True
+        If a resource file is already present at `filename` and `use_cache` is `True`, return immediately.
     """
     if preexisting_cache(filename, use_cache):
         return
@@ -94,13 +107,15 @@ def write_resource_list(domain=None, filename=None, use_cache=True):
 
 def get_glossary(domain, resource_list=None, glossary=None, timeout=60):
     """
-    Gets the glossary for the given domain.
+    Fetches and returns a glossary for the given domain.
+
+    Non-IO subroutine of the user-facing `write_glossary`.
     """
     resource_list = [] if resource_list is None else resource_list
     glossary = [] if glossary is None else glossary
 
-    if domain == "http://www.mdps.gov.qa/en/statistics1/Pages/default.aspx":
-        return get_qatari_ministry_of_planning_and_statistics_glossary(resource_list, glossary, timeout=timeout)
+    if "mdps.gov.qa/en/statistics1/Pages/default.aspx" in domain:
+        return _get_qatari_ministry_of_planning_and_statistics_glossary(resource_list, glossary, timeout=timeout)
 
     # All other HTML grabbers have not been implemented yet.
     elif domain is None:
@@ -111,7 +126,24 @@ def get_glossary(domain, resource_list=None, glossary=None, timeout=60):
 
 def write_glossary(domain=None, resource_filename=None, glossary_filename=None, timeout=60, use_cache=True):
     """
-    Writes the glossary file for the given domain.
+    Use a resource file to write a glossary to disc.
+
+    Parameters
+    ----------
+    domain: str, required
+        The domain landing page URI.
+    resource_filename: str
+        A path to a resource file to read processing jobs from.
+    glossary_filename: str
+        A path to a glossary file to write output to.
+    timeout: int, default 60
+        A timeout on how long the glossarizer can spend downloading a resource before timing it out. This prevents
+        occasional very large datasets from overwhelming your CPU. Resources that time out will be populated in the
+        glossary with a `filesize` field indicating how long they were downloading for before timing out.
+    use_cache: bool, default True
+        If a glossary file is already present at `glossary_filename` and `use_cache` is `True`, endpoints already in
+        that file will be left untouched and ones that are not will be appended on. If `use_cache` is `False` the
+        file will be overwritten instead.
     """
     resource_list, glossary = load_glossary_todo(resource_filename, glossary_filename, use_cache)
 
@@ -128,7 +160,7 @@ def write_glossary(domain=None, resource_filename=None, glossary_filename=None, 
 # INTERNAL ROUTINES #
 #####################
 
-def get_qatari_ministry_of_planning_and_statistics_resource_list():
+def _get_qatari_ministry_of_planning_and_statistics_resource_list():
     """
     Generates a resource list for the Qatar Ministry of Planning and Statistics open datasets.
     """
@@ -147,7 +179,7 @@ def get_qatari_ministry_of_planning_and_statistics_resource_list():
              'flags': []} for r in rlinks]
 
 
-def get_qatari_ministry_of_planning_and_statistics_glossary(resource_list, glossary, timeout=60):
+def _get_qatari_ministry_of_planning_and_statistics_glossary(resource_list, glossary, timeout=60):
     """
     Generates a glossary for the Qatar Ministry of Planning and Statistics open datasets.
     """
