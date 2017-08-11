@@ -4,8 +4,6 @@ https://github.com/ResidentMario/urban-physiology-toolkit/wiki/Glossarization-No
 """
 
 import json
-
-# import numpy as np
 import pandas as pd
 import pysocrata
 from selenium.common.exceptions import TimeoutException

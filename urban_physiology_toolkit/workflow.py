@@ -13,8 +13,7 @@ import nbformat
 
 def slugify(value):
     """
-    Normalizes string, converts to lowercase, removes non-alpha characters,
-    and converts spaces to hyphens.
+    Normalizes string, converts to lowercase, removes non-alpha characters, and converts spaces to hyphens.
     """
     # cf. https://stackoverflow.com/questions/295135/turn-a-string-into-a-valid-filename
     import unicodedata
