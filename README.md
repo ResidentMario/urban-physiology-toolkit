@@ -25,8 +25,6 @@ moment, but should be smoothed out eventually. Do the following:
 
 1. Create and activate a new virtual environment. `conda` is recommended, `virtualenv` is also good. I highly recommend 
 not mucking with your root environment.
-2. Run `pip install git+git://github.com/ResidentMario/pysocrata.git` to get [`pysocrata`](https://github.com/ResidentMario/pysocrata).
-3. Run `pip install git+git://github.com/ResidentMario/datafy` to get [`datafy`](https://github.com/ResidentMario/datafy).
 2. `git` clone this repository (`urban-physiology-toolkit`) locally and install it using `pip install .` Or 
 alternatively, run `pip install git+git://github.com/ResidentMario/urban-physiology-toolkit.git`. You will need 
 collaborator privileges to do either of these things, as this repository is currently private.
