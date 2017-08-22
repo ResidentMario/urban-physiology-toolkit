@@ -38,4 +38,4 @@ collaborator privileges to do either of these things, as this repository is curr
 this meant running `nano ~/.bashrc`, scrolling to the bottom, appending 
 `:$HOME/$HOME/Desktop/phantomjs-2.1.1-linux-x86_64/bin` to the path list (or whatever the version you downloaded is)
 , and then closing and reopening the terminal. To verify that you have added PhantomJS to the path correctly, run `echo 
-$HOME` or `phantomjs -v` in the terminal.
+$HOME` or `phantomjs -v` in the terminal. Note: this step is only necessary if you are using the Socrata glossarizer.
