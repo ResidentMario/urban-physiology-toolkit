@@ -23,13 +23,13 @@ documentation.
 The entire Urban Physiology workflow requires quite a few packages to install. This is moderately tedious at the 
 moment, but should be smoothed out eventually. Do the following:
 
-1. Create and activate a new virtual environment. `conda` is recommended, `virtualenv` is also good. I highly recommend 
+0. Create and activate a new virtual environment. `conda` is recommended, `virtualenv` is also good. I highly recommend 
 not mucking with your root environment.
-2. Install `airflow` HEAD directly from GitHub by running 
+1. Install `airflow` HEAD directly from GitHub by running 
 `pip install git+git://github.com/apache/incubator-airflow.git` ([why?](https://github.com/ResidentMario/airscooter#installation)).
-3. Install `airscooter` directly from GitHub by running `pip install git+git://github.com/ResidentMario/airscooter.git` ([why?](https://github.com/ResidentMario/airscooter#installation)).
-4. `pip install urban-physiology-toolkit airscooter-urban-physiology-plugin`
-6. (Optional) Install [PhantomJS](http://phantomjs.org/), and make that available on the system `PATH`. On most NIX systems 
+2. Install `airscooter` directly from GitHub by running `pip install git+git://github.com/ResidentMario/airscooter.git` ([why?](https://github.com/ResidentMario/airscooter#installation)).
+3. `pip install urban-physiology-toolkit airscooter-urban-physiology-plugin`
+4. (Optional) Install [PhantomJS](http://phantomjs.org/), and make that available on the system `PATH`. On most NIX systems 
 this meant running `nano ~/.bashrc`, scrolling to the bottom, appending 
 `:$HOME/$HOME/Desktop/phantomjs-2.1.1-linux-x86_64/bin` to the path list (or whatever the version you downloaded is)
 , and then closing and reopening the terminal. To verify that you have added PhantomJS to the path correctly, run `echo 
