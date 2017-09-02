@@ -26,7 +26,7 @@ moment, but should be smoothed out eventually. Do the following:
 0. Create and activate a new virtual environment. `conda` is recommended, `virtualenv` is also good. I highly recommend 
 not mucking with your root environment.
 1. Install `airflow` HEAD directly from GitHub by running 
-`pip install git+git://github.com/apache/incubator-airflow.git` ([why?](https://github.com/ResidentMario/airscooter#installation)).
+`pip install -e git://github.com/apache/incubator-airflow.git@1.8.2rc4` ([why?](https://github.com/ResidentMario/airscooter#installation)).
 2. Install `airscooter` directly from GitHub by running `pip install git+git://github.com/ResidentMario/airscooter.git` ([why?](https://github.com/ResidentMario/airscooter#installation)).
 3. `pip install urban-physiology-toolkit airscooter-urban-physiology-plugin`
 4. (Optional) Install [PhantomJS](http://phantomjs.org/), and make that available on the system `PATH`. On most NIX systems 
